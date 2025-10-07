@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 use rmcp::handler::server::tool::ToolRouter;
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::handler::server::ServerHandler;
@@ -72,15 +74,16 @@ fn get_url_variations(url: &str) -> Vec<String> {
     let mut variations = vec![url.to_string()];
 
     let url_lower = url.to_lowercase();
+    #[allow(clippy::case_sensitive_file_extension_comparisons)]
     if url_lower.ends_with(".md") || url_lower.ends_with(".txt") {
         return variations;
     }
 
     let base = url.trim_end_matches('/');
-    variations.push(format!("{}.md", base));
-    variations.push(format!("{}/index.md", base));
-    variations.push(format!("{}/llms.txt", base));
-    variations.push(format!("{}/llms-full.txt", base));
+    variations.push(format!("{base}.md"));
+    variations.push(format!("{base}/index.md"));
+    variations.push(format!("{base}/llms.txt"));
+    variations.push(format!("{base}/llms-full.txt"));
 
     variations
 }
@@ -99,9 +102,9 @@ fn url_to_path(base_dir: &Path, url: &str) -> Result<PathBuf, Box<dyn std::error
     if let Some(query) = parsed.query() {
         let current_ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
         let new_ext = if current_ext.is_empty() {
-            format!("?{}", query)
+            format!("?{query}")
         } else {
-            format!("{}?{}", current_ext, query)
+            format!("{current_ext}?{query}")
         };
         path.set_extension(new_ext);
     }
@@ -141,7 +144,7 @@ impl FetchServer {
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
-            .map_err(|e| McpError::internal_error(format!("Failed to create HTTP client: {}", e), None))?;
+            .map_err(|e| McpError::internal_error(format!("Failed to create HTTP client: {e}"), None))?;
 
         let variations = get_url_variations(&params.0.url);
 
@@ -169,7 +172,7 @@ impl FetchServer {
         }
 
         ensure_gitignore(&self.cache_dir).await
-            .map_err(|e| McpError::internal_error(format!("Failed to create .gitignore: {}", e), None))?;
+            .map_err(|e| McpError::internal_error(format!("Failed to create .gitignore: {e}"), None))?;
 
         let only_original = results.len() == 1 && results[0].0 == 0;
 
@@ -180,15 +183,15 @@ impl FetchServer {
             let markdown = html2md::parse_html(&result.content);
 
             let file_path = url_to_path(&self.cache_dir, &result.url)
-                .map_err(|e| McpError::internal_error(format!("Failed to parse URL: {}", e), None))?;
+                .map_err(|e| McpError::internal_error(format!("Failed to parse URL: {e}"), None))?;
 
             if let Some(parent) = file_path.parent() {
                 fs::create_dir_all(parent).await
-                    .map_err(|e| McpError::internal_error(format!("Failed to create directory: {}", e), None))?;
+                    .map_err(|e| McpError::internal_error(format!("Failed to create directory: {e}"), None))?;
             }
 
             fs::write(&file_path, &markdown).await
-                .map_err(|e| McpError::internal_error(format!("Failed to write file: {}", e), None))?;
+                .map_err(|e| McpError::internal_error(format!("Failed to write file: {e}"), None))?;
 
             let (lines, words, characters) = count_stats(&markdown);
             file_infos.push(FileInfo {
@@ -200,15 +203,15 @@ impl FetchServer {
         } else {
             for (_, result) in results {
                 let file_path = url_to_path(&self.cache_dir, &result.url)
-                    .map_err(|e| McpError::internal_error(format!("Failed to parse URL: {}", e), None))?;
+                    .map_err(|e| McpError::internal_error(format!("Failed to parse URL: {e}"), None))?;
 
                 if let Some(parent) = file_path.parent() {
                     fs::create_dir_all(parent).await
-                        .map_err(|e| McpError::internal_error(format!("Failed to create directory: {}", e), None))?;
+                        .map_err(|e| McpError::internal_error(format!("Failed to create directory: {e}"), None))?;
                 }
 
                 fs::write(&file_path, &result.content).await
-                    .map_err(|e| McpError::internal_error(format!("Failed to write file: {}", e), None))?;
+                    .map_err(|e| McpError::internal_error(format!("Failed to write file: {e}"), None))?;
 
                 let (lines, words, characters) = count_stats(&result.content);
                 file_infos.push(FileInfo {
