@@ -40,10 +40,19 @@ struct FetchResult {
     url: String,
     content: String,
     is_html: bool,
+    is_markdown: bool,
 }
 
 async fn fetch_url(client: &reqwest::Client, url: &str) -> Option<FetchResult> {
-    match client.get(url).send().await {
+    match client
+        .get(url)
+        .header(
+            "Accept",
+            "text/markdown, text/x-markdown, text/plain, text/html;q=0.5, */*;q=0.1",
+        )
+        .send()
+        .await
+    {
         Ok(response) => {
             if response.status().is_success() {
                 let content_type = response
@@ -53,12 +62,15 @@ async fn fetch_url(client: &reqwest::Client, url: &str) -> Option<FetchResult> {
                     .unwrap_or("");
 
                 let is_html = content_type.contains("text/html");
+                let is_markdown = content_type.contains("text/markdown")
+                    || content_type.contains("text/x-markdown");
 
                 match response.text().await {
                     Ok(content) => Some(FetchResult {
                         url: url.to_string(),
                         content,
                         is_html,
+                        is_markdown,
                     }),
                     Err(_) => None,
                 }
@@ -178,7 +190,7 @@ impl FetchServer {
 
         let mut file_infos = Vec::new();
 
-        if only_original && results[0].1.is_html {
+        if only_original && results[0].1.is_html && !results[0].1.is_markdown {
             let result = &results[0].1;
             let markdown = html2md::parse_html(&result.content);
 

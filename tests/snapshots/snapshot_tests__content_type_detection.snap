@@ -1,0 +1,5 @@
+---
+source: tests/snapshot_tests.rs
+expression: snapshot_data
+---
+"text/html; charset=utf-8 -> HTML: true, MD: false\ntext/markdown -> HTML: false, MD: true\ntext/x-markdown -> HTML: false, MD: true\ntext/plain -> HTML: false, MD: false\napplication/json -> HTML: false, MD: false"

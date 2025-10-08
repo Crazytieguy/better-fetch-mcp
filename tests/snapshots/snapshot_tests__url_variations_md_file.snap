@@ -1,0 +1,7 @@
+---
+source: tests/snapshot_tests.rs
+expression: md_variations
+---
+[
+    "https://example.com/readme.md",
+]

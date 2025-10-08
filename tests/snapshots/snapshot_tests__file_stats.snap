@@ -1,0 +1,5 @@
+---
+source: tests/snapshot_tests.rs
+expression: stats
+---
+"Content length: 48 bytes\nLines: 5\nWords: 9\nCharacters: 48"

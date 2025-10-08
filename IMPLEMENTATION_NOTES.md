@@ -9,7 +9,10 @@ Successfully implemented a high-quality MCP server for fetching and caching web 
 ### Core Functionality
 - **Smart URL Variations**: Automatically tries multiple content variations (.md, /index.md, /llms.txt, /llms-full.txt)
 - **Intelligent Caching**: Saves to `.better-fetch-mcp/<domain>/<path>`
-- **HTML to Markdown**: Automatic conversion when single HTML response received
+- **Accept Headers**: Sends `Accept: text/markdown, text/x-markdown, text/plain, text/html;q=0.5, */*;q=0.1` to prefer Markdown/text
+- **Content-Type Detection**: Detects both `text/markdown` and `text/x-markdown` MIME types
+- **HTML to Markdown**: Automatic conversion when single HTML response received (only if not already Markdown)
+- **Markdown Preservation**: Native Markdown responses are saved directly without conversion
 - **Concurrent Fetching**: All URL variations fetched in parallel
 - **File Statistics**: Returns lines, words, and characters for each cached file
 - **Gitignore Management**: Auto-creates `.gitignore` with `*` on first use
@@ -20,11 +23,14 @@ Successfully implemented a high-quality MCP server for fetching and caching web 
 - 30-second timeout per request
 
 ### Code Quality
-- ✅ All tests passing (8/8 unit tests)
-- ✅ Clippy passes with `-D warnings`
-- ✅ Snapshot tests with `insta`
+- ✅ All tests passing (14/14 tests: 8 unit + 3 integration + 5 snapshot)
+- ✅ Clippy passes with `-D warnings` and `clippy::pedantic`
+- ✅ Snapshot tests with `insta` for easy output verification
 - ✅ Comprehensive test coverage for core logic
 - ✅ Clean architecture with separation of concerns
+- ✅ Content-type detection fully tested
+- ✅ URL variation logic snapshot tested
+- ✅ Path generation validated
 
 ## Project Structure
 
@@ -73,6 +79,25 @@ The implementation uses the `#[tool_router]` macro from rmcp to generate MCP too
 ```bash
 cargo test
 ```
+
+### Snapshot Tests
+```bash
+# Run snapshot tests
+cargo test
+
+# Review and accept snapshot changes
+cargo insta test --accept
+
+# View current snapshots
+ls tests/snapshots/
+```
+
+Snapshot tests cover:
+- URL variation generation
+- Content-type detection (HTML, Markdown, plain text)
+- File path generation
+- File statistics calculation
+- Accept header behavior
 
 ### Integration Tests (requires network)
 ```bash
@@ -130,9 +155,10 @@ cargo run --example test_fetch
 
 ## Quality Metrics
 
-- **Lines of Code**: ~340 (main) + ~90 (tests)
-- **Test Coverage**: Core logic fully tested
-- **Clippy**: 0 warnings
+- **Lines of Code**: ~350 (main) + ~220 (tests)
+- **Test Coverage**: Core logic fully tested with snapshots
+- **Clippy**: 0 warnings with `clippy::pedantic`
+- **Tests**: 14/14 passing (8 unit + 3 integration + 5 snapshot)
 - **Build Time**: ~8s (release)
 - **Binary Size**: ~10MB (release, with dependencies)
 

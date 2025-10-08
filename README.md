@@ -13,12 +13,15 @@ A high-quality Model Context Protocol (MCP) server for fetching and caching web 
 
 - **Intelligent Caching**:
   - Saves content to `.better-fetch-mcp/<domain>/<path>`
-  - Only saves HTML-to-Markdown if single response received
+  - Only saves HTML-to-Markdown if single HTML response received
+  - Preserves native Markdown when server returns it
   - Saves all successful variations otherwise
   - Automatic `.gitignore` creation on first use
 
 - **Content Processing**:
-  - Automatic HTML-to-Markdown conversion (when appropriate)
+  - Prefers Markdown/text content via Accept headers
+  - Automatic HTML-to-Markdown conversion (only when needed)
+  - Detects and preserves Markdown content-type responses
   - Returns file statistics (lines, words, characters)
   - Concurrent fetching for optimal performance
 
@@ -103,6 +106,9 @@ https://example.com/docs →
 # Unit and snapshot tests
 cargo test
 
+# Review and accept snapshot changes
+cargo insta test --accept
+
 # Integration tests (requires network)
 cargo test -- --ignored
 
@@ -112,8 +118,8 @@ cargo run --example test_fetch
 
 ### Code Quality
 ```bash
-# Run clippy
-cargo clippy -- -D warnings
+# Run clippy with pedantic lints
+cargo clippy --all-targets -- -D warnings
 
 # Format code
 cargo fmt
