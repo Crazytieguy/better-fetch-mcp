@@ -1,5 +1,29 @@
 # Using better-fetch-mcp with MCP Clients
 
+## Claude Code Configuration (Recommended)
+
+Add the server using the CLI:
+
+```bash
+# Install the server
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/Crazytieguy/better-fetch-mcp/releases/download/v0.1.0/better-fetch-mcp-installer.sh | sh
+
+# Add to Claude Code
+claude mcp add --transport stdio better-fetch -- better-fetch-mcp
+```
+
+Or with a custom cache directory:
+
+```bash
+claude mcp add --transport stdio better-fetch -- better-fetch-mcp /path/to/custom/cache
+```
+
+Verify it's connected:
+
+```bash
+claude mcp list
+```
+
 ## Claude Desktop Configuration
 
 Add this to your Claude Desktop configuration file:
