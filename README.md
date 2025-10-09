@@ -103,11 +103,8 @@ https://example.com/docs →
 
 ### Run Tests
 ```bash
-# Unit and snapshot tests
+# Unit tests
 cargo test
-
-# Review and accept snapshot changes
-cargo insta test --accept
 
 # Integration tests (requires network)
 cargo test -- --ignored
@@ -131,7 +128,6 @@ cargo fmt
 - **HTTP Client**: `reqwest` with `rustls-tls`
 - **HTML Conversion**: `html2md`
 - **Async Runtime**: `tokio`
-- **Testing**: `insta` for snapshot tests
 
 ## License
 

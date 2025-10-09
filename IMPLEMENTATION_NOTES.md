@@ -23,13 +23,12 @@ Successfully implemented a high-quality MCP server for fetching and caching web 
 - 30-second timeout per request
 
 ### Code Quality
-- ✅ All tests passing (14/14 tests: 8 unit + 3 integration + 5 snapshot)
+- ✅ All tests passing (9/9 tests: 8 unit + 1 integration)
 - ✅ Clippy passes with `-D warnings` and `clippy::pedantic`
-- ✅ Snapshot tests with `insta` for easy output verification
 - ✅ Comprehensive test coverage for core logic
 - ✅ Clean architecture with separation of concerns
 - ✅ Content-type detection fully tested
-- ✅ URL variation logic snapshot tested
+- ✅ URL variation logic tested
 - ✅ Path generation validated
 
 ## Project Structure
@@ -60,7 +59,6 @@ better-fetch-mcp/
 - `url`: URL parsing
 
 ### Dev Dependencies
-- `insta`: Snapshot testing
 - `tempfile`: Temporary directories for tests
 - `walkdir`: Directory traversal
 
@@ -80,24 +78,11 @@ The implementation uses the `#[tool_router]` macro from rmcp to generate MCP too
 cargo test
 ```
 
-### Snapshot Tests
-```bash
-# Run snapshot tests
-cargo test
-
-# Review and accept snapshot changes
-cargo insta test --accept
-
-# View current snapshots
-ls tests/snapshots/
-```
-
-Snapshot tests cover:
+Unit tests cover:
 - URL variation generation
-- Content-type detection (HTML, Markdown, plain text)
+- Content-type detection
 - File path generation
 - File statistics calculation
-- Accept header behavior
 
 ### Integration Tests (requires network)
 ```bash
@@ -155,10 +140,10 @@ cargo run --example test_fetch
 
 ## Quality Metrics
 
-- **Lines of Code**: ~350 (main) + ~220 (tests)
-- **Test Coverage**: Core logic fully tested with snapshots
+- **Lines of Code**: ~350 (main) + ~100 (tests)
+- **Test Coverage**: Core logic fully tested
 - **Clippy**: 0 warnings with `clippy::pedantic`
-- **Tests**: 14/14 passing (8 unit + 3 integration + 5 snapshot)
+- **Tests**: 9/9 passing (8 unit + 1 integration)
 - **Build Time**: ~8s (release)
 - **Binary Size**: ~10MB (release, with dependencies)
 

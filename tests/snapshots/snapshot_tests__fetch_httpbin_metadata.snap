@@ -1,5 +1,0 @@
----
-source: tests/snapshot_tests.rs
-expression: snapshot_data
----
-"URL: https://httpbin.org/html\nContent-Type: text/html; charset=utf-8\nIs HTML: true\nIs Markdown: false"

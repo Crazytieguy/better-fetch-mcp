@@ -270,15 +270,12 @@ mod tests {
         let url = "https://example.com/docs";
         let variations = get_url_variations(url);
 
-        insta::assert_debug_snapshot!(variations, @r#"
-        [
-            "https://example.com/docs",
-            "https://example.com/docs.md",
-            "https://example.com/docs/index.md",
-            "https://example.com/docs/llms.txt",
-            "https://example.com/docs/llms-full.txt",
-        ]
-        "#);
+        assert_eq!(variations.len(), 5);
+        assert_eq!(variations[0], "https://example.com/docs");
+        assert_eq!(variations[1], "https://example.com/docs.md");
+        assert_eq!(variations[2], "https://example.com/docs/index.md");
+        assert_eq!(variations[3], "https://example.com/docs/llms.txt");
+        assert_eq!(variations[4], "https://example.com/docs/llms-full.txt");
     }
 
     #[test]
@@ -286,11 +283,8 @@ mod tests {
         let url = "https://example.com/docs/readme.md";
         let variations = get_url_variations(url);
 
-        insta::assert_debug_snapshot!(variations, @r#"
-        [
-            "https://example.com/docs/readme.md",
-        ]
-        "#);
+        assert_eq!(variations.len(), 1);
+        assert_eq!(variations[0], "https://example.com/docs/readme.md");
     }
 
     #[test]
@@ -298,11 +292,8 @@ mod tests {
         let url = "https://example.com/docs/file.txt";
         let variations = get_url_variations(url);
 
-        insta::assert_debug_snapshot!(variations, @r#"
-        [
-            "https://example.com/docs/file.txt",
-        ]
-        "#);
+        assert_eq!(variations.len(), 1);
+        assert_eq!(variations[0], "https://example.com/docs/file.txt");
     }
 
     #[test]

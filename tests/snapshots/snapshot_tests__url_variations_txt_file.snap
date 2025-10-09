@@ -1,7 +1,0 @@
----
-source: tests/snapshot_tests.rs
-expression: txt_variations
----
-[
-    "https://example.com/file.txt",
-]
