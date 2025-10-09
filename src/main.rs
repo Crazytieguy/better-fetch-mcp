@@ -3,7 +3,8 @@
 use rmcp::handler::server::tool::ToolRouter;
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::handler::server::ServerHandler;
-use rmcp::{tool, tool_router, ErrorData as McpError, ServiceExt};
+use rmcp::model::{Implementation, ProtocolVersion, ServerCapabilities, ServerInfo};
+use rmcp::{tool, tool_handler, tool_router, ErrorData as McpError, ServiceExt};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -239,7 +240,20 @@ impl FetchServer {
     }
 }
 
-impl ServerHandler for FetchServer {}
+#[tool_handler]
+impl ServerHandler for FetchServer {
+    fn get_info(&self) -> ServerInfo {
+        ServerInfo {
+            protocol_version: ProtocolVersion::V_2024_11_05,
+            capabilities: ServerCapabilities::builder().enable_tools().build(),
+            server_info: Implementation::from_build_env(),
+            instructions: Some(
+                "A web content fetcher that tries multiple URL variations (.md, /index.md, /llms.txt, /llms-full.txt) and caches content locally with HTML-to-Markdown conversion."
+                    .to_string(),
+            ),
+        }
+    }
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
