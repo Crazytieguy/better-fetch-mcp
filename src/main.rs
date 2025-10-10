@@ -26,6 +26,8 @@ struct FetchInput {
 #[derive(Debug, Serialize, JsonSchema)]
 struct FileInfo {
     path: String,
+    source_url: String,
+    content_type: String,
     lines: usize,
     words: usize,
     characters: usize,
@@ -108,8 +110,20 @@ fn url_to_path(base_dir: &Path, url: &str) -> Result<PathBuf, Box<dyn std::error
     let mut path = base_dir.join(domain);
 
     let url_path = parsed.path().trim_start_matches('/');
+
+    let needs_index = if url_path.is_empty() {
+        true
+    } else {
+        let last_segment = url_path.split('/').last().unwrap_or("");
+        Path::new(last_segment).extension().is_none()
+    };
+
     if !url_path.is_empty() {
         path.push(url_path);
+    }
+
+    if needs_index {
+        path.push("index");
     }
 
     if let Some(query) = parsed.query() {
@@ -136,6 +150,48 @@ async fn ensure_gitignore(base_dir: &Path) -> Result<(), Box<dyn std::error::Err
     Ok(())
 }
 
+fn clean_html(html: &str) -> String {
+    use scraper::{Html, Selector, ElementRef};
+    use std::collections::HashSet;
+
+    let document = Html::parse_document(html);
+
+    let remove_selectors: HashSet<&str> = [
+        "script", "style", "nav", "header", "footer", "noscript", "iframe",
+        ".navigation", ".nav", ".menu", ".sidebar", ".header", ".footer",
+        "#navigation", "#nav", "#menu", "#sidebar", "#header", "#footer",
+        "[role=navigation]", "[role=banner]", "[role=contentinfo]"
+    ].iter().copied().collect();
+
+    fn should_keep(element: &ElementRef, remove_selectors: &HashSet<&str>) -> bool {
+        for selector_str in remove_selectors {
+            if let Ok(selector) = Selector::parse(selector_str) {
+                if element.select(&selector).next().is_some() || selector.matches(element) {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
+    let main_selectors = ["main", "article", "[role=main]", ".main-content", "#main-content", "#content", ".content"];
+
+    for main_sel in &main_selectors {
+        if let Ok(selector) = Selector::parse(main_sel) {
+            if let Some(main_element) = document.select(&selector).next() {
+                return main_element.html();
+            }
+        }
+    }
+
+    let body_selector = Selector::parse("body").unwrap();
+    if let Some(body) = document.select(&body_selector).next() {
+        return body.html();
+    }
+
+    html.to_string()
+}
+
 fn count_stats(content: &str) -> (usize, usize, usize) {
     let lines = content.lines().count();
     let words = content.split_whitespace().count();
@@ -152,7 +208,7 @@ impl FetchServer {
         }
     }
 
-    #[tool(description = "Fetch content from a URL and cache it locally. If the URL ends with .md or .txt, only that URL is fetched. Otherwise, multiple variations are tried concurrently (.md, /index.md, /llms.txt, /llms-full.txt). Content is saved to .better-fetch-mcp/<domain>/<path>.")]
+    #[tool(description = "Fetch web content and cache it locally with intelligent format detection. Tries documentation-friendly formats (.md, /index.md, /llms.txt, /llms-full.txt) concurrently. HTML is automatically cleaned and converted to Markdown. Returns file paths with content type and statistics.")]
     async fn fetch(&self, params: Parameters<FetchInput>) -> Result<rmcp::Json<FetchOutput>, McpError> {
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
@@ -171,9 +227,9 @@ impl FetchServer {
         }
 
         let mut results = Vec::new();
-        for (i, task) in fetch_tasks.into_iter().enumerate() {
+        for task in fetch_tasks {
             if let Ok(Some(result)) = task.await {
-                results.push((i, result));
+                results.push(result);
             }
         }
 
@@ -187,13 +243,38 @@ impl FetchServer {
         ensure_gitignore(&self.cache_dir).await
             .map_err(|e| McpError::internal_error(format!("Failed to create .gitignore: {e}"), None))?;
 
-        let only_original = results.len() == 1 && results[0].0 == 0;
-
         let mut file_infos = Vec::new();
 
-        if only_original && results[0].1.is_html && !results[0].1.is_markdown {
-            let result = &results[0].1;
-            let markdown = html2md::parse_html(&result.content);
+        let has_llm_friendly = results.iter().any(|r| {
+            let url_lower = r.url.to_lowercase();
+            url_lower.contains("/llms.txt") || url_lower.contains("/llms-full.txt") ||
+            r.is_markdown || url_lower.ends_with(".md")
+        });
+
+        for result in results {
+            let url_lower = result.url.to_lowercase();
+            let content_type = if url_lower.contains("/llms-full.txt") {
+                "llms-full"
+            } else if url_lower.contains("/llms.txt") {
+                "llms"
+            } else if result.is_markdown || url_lower.ends_with(".md") {
+                "markdown"
+            } else if result.is_html {
+                "html-converted"
+            } else {
+                "text"
+            };
+
+            if has_llm_friendly && result.is_html && !result.is_markdown {
+                continue;
+            }
+
+            let content_to_save = if result.is_html && !result.is_markdown {
+                let cleaned = clean_html(&result.content);
+                html2md::parse_html(&cleaned)
+            } else {
+                result.content.clone()
+            };
 
             let file_path = url_to_path(&self.cache_dir, &result.url)
                 .map_err(|e| McpError::internal_error(format!("Failed to parse URL: {e}"), None))?;
@@ -203,37 +284,18 @@ impl FetchServer {
                     .map_err(|e| McpError::internal_error(format!("Failed to create directory: {e}"), None))?;
             }
 
-            fs::write(&file_path, &markdown).await
+            fs::write(&file_path, &content_to_save).await
                 .map_err(|e| McpError::internal_error(format!("Failed to write file: {e}"), None))?;
 
-            let (lines, words, characters) = count_stats(&markdown);
+            let (lines, words, characters) = count_stats(&content_to_save);
             file_infos.push(FileInfo {
                 path: file_path.to_string_lossy().to_string(),
+                source_url: result.url.clone(),
+                content_type: content_type.to_string(),
                 lines,
                 words,
                 characters,
             });
-        } else {
-            for (_, result) in results {
-                let file_path = url_to_path(&self.cache_dir, &result.url)
-                    .map_err(|e| McpError::internal_error(format!("Failed to parse URL: {e}"), None))?;
-
-                if let Some(parent) = file_path.parent() {
-                    fs::create_dir_all(parent).await
-                        .map_err(|e| McpError::internal_error(format!("Failed to create directory: {e}"), None))?;
-                }
-
-                fs::write(&file_path, &result.content).await
-                    .map_err(|e| McpError::internal_error(format!("Failed to write file: {e}"), None))?;
-
-                let (lines, words, characters) = count_stats(&result.content);
-                file_infos.push(FileInfo {
-                    path: file_path.to_string_lossy().to_string(),
-                    lines,
-                    words,
-                    characters,
-                });
-            }
         }
 
         Ok(rmcp::Json(FetchOutput { files: file_infos }))
@@ -248,7 +310,7 @@ impl ServerHandler for FetchServer {
             capabilities: ServerCapabilities::builder().enable_tools().build(),
             server_info: Implementation::from_build_env(),
             instructions: Some(
-                "A web content fetcher that tries multiple URL variations (.md, /index.md, /llms.txt, /llms-full.txt) and caches content locally with HTML-to-Markdown conversion."
+                "Web content fetcher with intelligent format detection for documentation. Tries multiple URL variations (.md, /index.md, /llms.txt, /llms-full.txt) concurrently. Cleans HTML and converts to Markdown. Deduplicates content automatically."
                     .to_string(),
             ),
         }
@@ -316,7 +378,7 @@ mod tests {
         let url = "https://example.com/docs/page";
         let path = url_to_path(&base, url).unwrap();
 
-        assert_eq!(path, PathBuf::from("/cache/example.com/docs/page"));
+        assert_eq!(path, PathBuf::from("/cache/example.com/docs/page/index"));
     }
 
     #[test]
@@ -334,7 +396,7 @@ mod tests {
         let url = "https://example.com/";
         let path = url_to_path(&base, url).unwrap();
 
-        assert_eq!(path, PathBuf::from("/cache/example.com"));
+        assert_eq!(path, PathBuf::from("/cache/example.com/index"));
     }
 
     #[test]
