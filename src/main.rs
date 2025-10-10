@@ -150,46 +150,99 @@ async fn ensure_gitignore(base_dir: &Path) -> Result<(), Box<dyn std::error::Err
     Ok(())
 }
 
+fn remove_elements(document: &scraper::Html, selectors: &[&str]) -> String {
+    let mut cleaned = document.html();
+
+    for selector_str in selectors {
+        if let Ok(selector) = scraper::Selector::parse(selector_str) {
+            for element in document.select(&selector) {
+                let elem_html = element.html();
+                cleaned = cleaned.replace(&elem_html, "");
+            }
+        }
+    }
+
+    cleaned
+}
+
+fn simplify_images(html: &str) -> String {
+    use scraper::{Html, Selector};
+
+    let document = Html::parse_document(html);
+    let mut result = html.to_string();
+
+    if let Ok(img_selector) = Selector::parse("img") {
+        for img in document.select(&img_selector) {
+            let img_html = img.html();
+
+            let alt = img.value().attr("alt").unwrap_or("");
+            let src = img.value().attr("src").unwrap_or("");
+
+            let simple_img = if !alt.is_empty() && !src.is_empty() {
+                format!("![{}]({})", alt, src)
+            } else if !src.is_empty() {
+                format!("![image]({})", src)
+            } else {
+                String::new()
+            };
+
+            result = result.replace(&img_html, &simple_img);
+        }
+    }
+
+    result
+}
+
 fn clean_html(html: &str) -> String {
-    use scraper::{Html, Selector, ElementRef};
-    use std::collections::HashSet;
+    use scraper::{Html, Selector};
 
     let document = Html::parse_document(html);
 
-    let remove_selectors: HashSet<&str> = [
-        "script", "style", "nav", "header", "footer", "noscript", "iframe",
-        ".navigation", ".nav", ".menu", ".sidebar", ".header", ".footer",
-        "#navigation", "#nav", "#menu", "#sidebar", "#header", "#footer",
-        "[role=navigation]", "[role=banner]", "[role=contentinfo]"
-    ].iter().copied().collect();
+    let remove_selectors = &[
+        "script",
+        "style",
+        "noscript",
+        "iframe",
+        "nav",
+        "header[role=banner]",
+        "footer[role=contentinfo]",
+        ".navigation",
+        ".nav",
+        "#navigation",
+        "#nav",
+        "[aria-label*=navigation]",
+        "[aria-label*=Navigation]",
+    ];
 
-    fn should_keep(element: &ElementRef, remove_selectors: &HashSet<&str>) -> bool {
-        for selector_str in remove_selectors {
-            if let Ok(selector) = Selector::parse(selector_str) {
-                if element.select(&selector).next().is_some() || selector.matches(element) {
-                    return false;
-                }
-            }
-        }
-        true
-    }
+    let cleaned_step1 = remove_elements(&document, remove_selectors);
+    let cleaned_step2 = simplify_images(&cleaned_step1);
+    let document2 = Html::parse_document(&cleaned_step2);
 
-    let main_selectors = ["main", "article", "[role=main]", ".main-content", "#main-content", "#content", ".content"];
+    let main_selectors = [
+        "main",
+        "article",
+        "[role=main]",
+        ".main-content",
+        "#main-content",
+        "#content",
+        ".content",
+    ];
 
     for main_sel in &main_selectors {
         if let Ok(selector) = Selector::parse(main_sel) {
-            if let Some(main_element) = document.select(&selector).next() {
+            if let Some(main_element) = document2.select(&selector).next() {
                 return main_element.html();
             }
         }
     }
 
-    let body_selector = Selector::parse("body").unwrap();
-    if let Some(body) = document.select(&body_selector).next() {
-        return body.html();
+    if let Ok(body_selector) = Selector::parse("body") {
+        if let Some(body) = document2.select(&body_selector).next() {
+            return body.html();
+        }
     }
 
-    html.to_string()
+    cleaned_step2
 }
 
 fn count_stats(content: &str) -> (usize, usize, usize) {
