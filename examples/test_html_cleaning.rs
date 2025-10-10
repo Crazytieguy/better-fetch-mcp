@@ -27,21 +27,14 @@ fn simplify_images(html: &str) -> String {
             let src = img.value().attr("src").unwrap_or("");
 
             let role = img.value().attr("role").unwrap_or("");
-            let class = img.value().attr("class").unwrap_or("");
 
-            let is_icon = alt.is_empty()
-                || alt.len() < 3
-                || alt == "image"
-                || role == "presentation"
-                || class.contains("icon")
-                || class.contains("logo")
-                || src.contains("icon")
-                || src.contains("logo")
-                || src.contains("copy-paste");
+            let is_decorative = role == "presentation"
+                || role == "none"
+                || alt.is_empty() && src.contains("icon");
 
-            let simple_img = if !is_icon && !alt.is_empty() && !src.is_empty() {
+            let simple_img = if !is_decorative && !alt.is_empty() && !src.is_empty() {
                 format!("![{}]({})", alt, src)
-            } else if !is_icon && !src.is_empty() {
+            } else if !is_decorative && !src.is_empty() {
                 format!("![image]({})", src)
             } else {
                 String::new()
@@ -62,13 +55,7 @@ fn clean_html(html: &str) -> String {
         "style",
         "noscript",
         "iframe",
-        "svg",
         "nav",
-        "header",
-        "footer",
-        "aside",
-        "form",
-        "button",
         "[role=banner]",
         "[role=navigation]",
         "[role=contentinfo]",
@@ -80,42 +67,21 @@ fn clean_html(html: &str) -> String {
         "[aria-label*=Breadcrumb]",
         "[aria-label*=search]",
         "[aria-label*=Search]",
-        "[aria-label*=menu]",
-        "[aria-label*=Menu]",
-        "[aria-label*=sidebar]",
-        "[aria-label*=Sidebar]",
-        "[aria-label*=footer]",
-        "[aria-label*=Footer]",
         ".navigation",
         ".nav",
         ".navbar",
         ".nav-bar",
-        ".menu",
-        ".sidebar",
-        ".side-bar",
-        ".breadcrumb",
-        ".breadcrumbs",
-        ".footer",
-        ".header",
         ".site-header",
         ".site-footer",
         ".page-header",
         ".page-footer",
-        ".toc",
-        ".table-of-contents",
-        ".search",
-        ".search-box",
+        ".breadcrumb",
+        ".breadcrumbs",
         "#navigation",
         "#nav",
         "#navbar",
-        "#menu",
-        "#sidebar",
         "#breadcrumb",
         "#breadcrumbs",
-        "#footer",
-        "#header",
-        "#toc",
-        "#search",
     ];
 
     let cleaned_step1 = remove_elements(&document, remove_selectors);
@@ -180,20 +146,25 @@ fn clean_markdown(markdown: &str) -> String {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let test_urls = vec![
-        "https://react.dev",
-        "https://go.dev/doc",
-        "https://tailwindcss.com/docs",
-        "https://vuejs.org/guide",
-        "https://docs.python.org/3/tutorial/",
-        "https://doc.rust-lang.org/book/",
-        "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
-        "https://nextjs.org/docs",
+        ("react.dev", "https://react.dev"),
+        ("go.dev-doc", "https://go.dev/doc"),
+        ("tailwindcss.com-docs", "https://tailwindcss.com/docs"),
+        ("vuejs.org-guide", "https://vuejs.org/guide"),
+        ("python.org-tutorial", "https://docs.python.org/3/tutorial/"),
+        ("rust-lang.org-book", "https://doc.rust-lang.org/book/"),
+        ("mdn-javascript", "https://developer.mozilla.org/en-US/docs/Web/JavaScript"),
+        ("nextjs.org-docs", "https://nextjs.org/docs"),
+        ("github-readme", "https://github.com/anthropics/anthropic-sdk-python"),
+        ("stackoverflow", "https://stackoverflow.com/questions/1732348/regex-match-open-tags-except-xhtml-self-contained-tags"),
+        ("wikipedia", "https://en.wikipedia.org/wiki/Markdown"),
     ];
 
-    println!("Fetching test pages...\n");
+    std::fs::create_dir_all(".test-outputs")?;
 
-    for url in test_urls {
-        println!("Testing: {}", url);
+    println!("Fetching test pages and saving to .test-outputs/...\n");
+
+    for (name, url) in test_urls {
+        println!("Testing: {} ({})", name, url);
         println!("{}", "=".repeat(80));
 
         let response = reqwest::blocking::get(url)?;
@@ -203,17 +174,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let markdown = html2md::parse_html(&cleaned);
         let markdown = clean_markdown(&markdown);
 
-        let lines: Vec<&str> = markdown.lines().collect();
-        let preview_lines = &lines[..lines.len().min(150)];
+        let output_path = format!(".test-outputs/{}.md", name);
+        std::fs::write(&output_path, &markdown)?;
 
-        println!("First 150 lines of converted markdown:");
+        let lines: Vec<&str> = markdown.lines().collect();
+        let preview_lines = &lines[..lines.len().min(50)];
+
+        println!("First 50 lines of converted markdown:");
         println!("{}", "-".repeat(80));
         for (i, line) in preview_lines.iter().enumerate() {
             println!("{:3} | {}", i + 1, line);
         }
         println!("\nTotal lines: {}", lines.len());
+        println!("Saved to: {}", output_path);
         println!("\n\n");
     }
+
+    println!("All outputs saved to .test-outputs/ directory");
+    println!("You can review full files with: ls -lh .test-outputs/");
 
     Ok(())
 }

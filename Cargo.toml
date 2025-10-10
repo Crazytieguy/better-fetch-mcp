@@ -2,7 +2,7 @@
 name = "better-fetch-mcp"
 version = "0.1.0"
 edition = "2024"
-description = "MCP server that fetches web content as LLM-friendly Markdown with smart format detection and HTML cleaning"
+description = "MCP server that fetches and caches web content as LLM-friendly Markdown files with smart format detection"
 homepage = "https://github.com/Crazytieguy/better-fetch-mcp"
 repository = "https://github.com/Crazytieguy/better-fetch-mcp"
 

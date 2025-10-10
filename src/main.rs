@@ -179,21 +179,14 @@ fn simplify_images(html: &str) -> String {
             let src = img.value().attr("src").unwrap_or("");
 
             let role = img.value().attr("role").unwrap_or("");
-            let class = img.value().attr("class").unwrap_or("");
 
-            let is_icon = alt.is_empty()
-                || alt.len() < 3
-                || alt == "image"
-                || role == "presentation"
-                || class.contains("icon")
-                || class.contains("logo")
-                || src.contains("icon")
-                || src.contains("logo")
-                || src.contains("copy-paste");
+            let is_decorative = role == "presentation"
+                || role == "none"
+                || alt.is_empty() && src.contains("icon");
 
-            let simple_img = if !is_icon && !alt.is_empty() && !src.is_empty() {
+            let simple_img = if !is_decorative && !alt.is_empty() && !src.is_empty() {
                 format!("![{alt}]({src})")
-            } else if !is_icon && !src.is_empty() {
+            } else if !is_decorative && !src.is_empty() {
                 format!("![image]({src})")
             } else {
                 String::new()
@@ -216,13 +209,7 @@ fn clean_html(html: &str) -> String {
         "style",
         "noscript",
         "iframe",
-        "svg",
         "nav",
-        "header",
-        "footer",
-        "aside",
-        "form",
-        "button",
         "[role=banner]",
         "[role=navigation]",
         "[role=contentinfo]",
@@ -234,42 +221,21 @@ fn clean_html(html: &str) -> String {
         "[aria-label*=Breadcrumb]",
         "[aria-label*=search]",
         "[aria-label*=Search]",
-        "[aria-label*=menu]",
-        "[aria-label*=Menu]",
-        "[aria-label*=sidebar]",
-        "[aria-label*=Sidebar]",
-        "[aria-label*=footer]",
-        "[aria-label*=Footer]",
         ".navigation",
         ".nav",
         ".navbar",
         ".nav-bar",
-        ".menu",
-        ".sidebar",
-        ".side-bar",
-        ".breadcrumb",
-        ".breadcrumbs",
-        ".footer",
-        ".header",
         ".site-header",
         ".site-footer",
         ".page-header",
         ".page-footer",
-        ".toc",
-        ".table-of-contents",
-        ".search",
-        ".search-box",
+        ".breadcrumb",
+        ".breadcrumbs",
         "#navigation",
         "#nav",
         "#navbar",
-        "#menu",
-        "#sidebar",
         "#breadcrumb",
         "#breadcrumbs",
-        "#footer",
-        "#header",
-        "#toc",
-        "#search",
     ];
 
     let cleaned_step1 = remove_elements(&document, remove_selectors);
