@@ -2,13 +2,14 @@
 name = "better-fetch-mcp"
 version = "0.1.0"
 edition = "2024"
-description = "High-quality MCP server for fetching and caching web content with smart URL variations and HTML-to-Markdown conversion"
+description = "MCP server that fetches web content as LLM-friendly Markdown with smart format detection and HTML cleaning"
 homepage = "https://github.com/Crazytieguy/better-fetch-mcp"
 repository = "https://github.com/Crazytieguy/better-fetch-mcp"
 
 [dependencies]
 html2md = "0.2.15"
 md5 = "0.8.0"
+regex = "1.11.1"
 reqwest = { version = "0.12.23", features = ["rustls-tls", "blocking"] }
 rmcp = "0.8.0"
 schemars = { version = "1.0.4", features = ["derive"] }

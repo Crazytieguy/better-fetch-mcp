@@ -1,9 +1,6 @@
-use scraper::{Html, Selector, ElementRef, Node};
-use scraper::node::Element;
+use scraper::{Html, Selector};
 
 fn remove_elements(document: &Html, selectors: &[&str]) -> String {
-    use scraper::html::Html as InnerHtml;
-
     let mut cleaned = document.html();
 
     for selector_str in selectors {
@@ -29,9 +26,22 @@ fn simplify_images(html: &str) -> String {
             let alt = img.value().attr("alt").unwrap_or("");
             let src = img.value().attr("src").unwrap_or("");
 
-            let simple_img = if !alt.is_empty() && !src.is_empty() {
+            let role = img.value().attr("role").unwrap_or("");
+            let class = img.value().attr("class").unwrap_or("");
+
+            let is_icon = alt.is_empty()
+                || alt.len() < 3
+                || alt == "image"
+                || role == "presentation"
+                || class.contains("icon")
+                || class.contains("logo")
+                || src.contains("icon")
+                || src.contains("logo")
+                || src.contains("copy-paste");
+
+            let simple_img = if !is_icon && !alt.is_empty() && !src.is_empty() {
                 format!("![{}]({})", alt, src)
-            } else if !src.is_empty() {
+            } else if !is_icon && !src.is_empty() {
                 format!("![image]({})", src)
             } else {
                 String::new()
@@ -52,15 +62,60 @@ fn clean_html(html: &str) -> String {
         "style",
         "noscript",
         "iframe",
+        "svg",
         "nav",
-        "header[role=banner]",
-        "footer[role=contentinfo]",
-        ".navigation",
-        ".nav",
-        "#navigation",
-        "#nav",
+        "header",
+        "footer",
+        "aside",
+        "form",
+        "button",
+        "[role=banner]",
+        "[role=navigation]",
+        "[role=contentinfo]",
+        "[role=complementary]",
+        "[role=search]",
         "[aria-label*=navigation]",
         "[aria-label*=Navigation]",
+        "[aria-label*=breadcrumb]",
+        "[aria-label*=Breadcrumb]",
+        "[aria-label*=search]",
+        "[aria-label*=Search]",
+        "[aria-label*=menu]",
+        "[aria-label*=Menu]",
+        "[aria-label*=sidebar]",
+        "[aria-label*=Sidebar]",
+        "[aria-label*=footer]",
+        "[aria-label*=Footer]",
+        ".navigation",
+        ".nav",
+        ".navbar",
+        ".nav-bar",
+        ".menu",
+        ".sidebar",
+        ".side-bar",
+        ".breadcrumb",
+        ".breadcrumbs",
+        ".footer",
+        ".header",
+        ".site-header",
+        ".site-footer",
+        ".page-header",
+        ".page-footer",
+        ".toc",
+        ".table-of-contents",
+        ".search",
+        ".search-box",
+        "#navigation",
+        "#nav",
+        "#navbar",
+        "#menu",
+        "#sidebar",
+        "#breadcrumb",
+        "#breadcrumbs",
+        "#footer",
+        "#header",
+        "#toc",
+        "#search",
     ];
 
     let cleaned_step1 = remove_elements(&document, remove_selectors);
@@ -75,6 +130,9 @@ fn clean_html(html: &str) -> String {
         "#main-content",
         "#content",
         ".content",
+        ".docs-content",
+        ".documentation",
+        ".page-content",
     ];
 
     for main_sel in &main_selectors {
@@ -94,12 +152,42 @@ fn clean_html(html: &str) -> String {
     cleaned_step2
 }
 
+fn clean_markdown(markdown: &str) -> String {
+    let mut result = markdown.to_string();
+
+    result = regex::Regex::new(r"\[\]\([^\)]*\)\[")
+        .unwrap()
+        .replace_all(&result, "[")
+        .to_string();
+
+    result = regex::Regex::new(r"\[\]\([^\)]*\)")
+        .unwrap()
+        .replace_all(&result, "")
+        .to_string();
+
+    result = regex::Regex::new(r"\[[\u{200B}\u{200C}\u{200D}\u{FEFF}]+\]")
+        .unwrap()
+        .replace_all(&result, "")
+        .to_string();
+
+    result = regex::Regex::new(r"\n{3,}")
+        .unwrap()
+        .replace_all(&result, "\n\n")
+        .to_string();
+
+    result
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let test_urls = vec![
         "https://react.dev",
         "https://go.dev/doc",
         "https://tailwindcss.com/docs",
         "https://vuejs.org/guide",
+        "https://docs.python.org/3/tutorial/",
+        "https://doc.rust-lang.org/book/",
+        "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+        "https://nextjs.org/docs",
     ];
 
     println!("Fetching test pages...\n");
@@ -113,11 +201,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let cleaned = clean_html(&html);
         let markdown = html2md::parse_html(&cleaned);
+        let markdown = clean_markdown(&markdown);
 
         let lines: Vec<&str> = markdown.lines().collect();
-        let preview_lines = &lines[..lines.len().min(50)];
+        let preview_lines = &lines[..lines.len().min(150)];
 
-        println!("First 50 lines of converted markdown:");
+        println!("First 150 lines of converted markdown:");
         println!("{}", "-".repeat(80));
         for (i, line) in preview_lines.iter().enumerate() {
             println!("{:3} | {}", i + 1, line);

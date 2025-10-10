@@ -74,6 +74,7 @@ version = "0.1.0"
 dependencies = [
  "html2md",
  "md5",
+ "regex",
  "reqwest",
  "rmcp",
  "schemars",

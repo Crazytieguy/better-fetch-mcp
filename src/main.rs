@@ -114,7 +114,7 @@ fn url_to_path(base_dir: &Path, url: &str) -> Result<PathBuf, Box<dyn std::error
     let needs_index = if url_path.is_empty() {
         true
     } else {
-        let last_segment = url_path.split('/').last().unwrap_or("");
+        let last_segment = url_path.split('/').next_back().unwrap_or("");
         Path::new(last_segment).extension().is_none()
     };
 
@@ -178,10 +178,23 @@ fn simplify_images(html: &str) -> String {
             let alt = img.value().attr("alt").unwrap_or("");
             let src = img.value().attr("src").unwrap_or("");
 
-            let simple_img = if !alt.is_empty() && !src.is_empty() {
-                format!("![{}]({})", alt, src)
-            } else if !src.is_empty() {
-                format!("![image]({})", src)
+            let role = img.value().attr("role").unwrap_or("");
+            let class = img.value().attr("class").unwrap_or("");
+
+            let is_icon = alt.is_empty()
+                || alt.len() < 3
+                || alt == "image"
+                || role == "presentation"
+                || class.contains("icon")
+                || class.contains("logo")
+                || src.contains("icon")
+                || src.contains("logo")
+                || src.contains("copy-paste");
+
+            let simple_img = if !is_icon && !alt.is_empty() && !src.is_empty() {
+                format!("![{alt}]({src})")
+            } else if !is_icon && !src.is_empty() {
+                format!("![image]({src})")
             } else {
                 String::new()
             };
@@ -203,15 +216,60 @@ fn clean_html(html: &str) -> String {
         "style",
         "noscript",
         "iframe",
+        "svg",
         "nav",
-        "header[role=banner]",
-        "footer[role=contentinfo]",
-        ".navigation",
-        ".nav",
-        "#navigation",
-        "#nav",
+        "header",
+        "footer",
+        "aside",
+        "form",
+        "button",
+        "[role=banner]",
+        "[role=navigation]",
+        "[role=contentinfo]",
+        "[role=complementary]",
+        "[role=search]",
         "[aria-label*=navigation]",
         "[aria-label*=Navigation]",
+        "[aria-label*=breadcrumb]",
+        "[aria-label*=Breadcrumb]",
+        "[aria-label*=search]",
+        "[aria-label*=Search]",
+        "[aria-label*=menu]",
+        "[aria-label*=Menu]",
+        "[aria-label*=sidebar]",
+        "[aria-label*=Sidebar]",
+        "[aria-label*=footer]",
+        "[aria-label*=Footer]",
+        ".navigation",
+        ".nav",
+        ".navbar",
+        ".nav-bar",
+        ".menu",
+        ".sidebar",
+        ".side-bar",
+        ".breadcrumb",
+        ".breadcrumbs",
+        ".footer",
+        ".header",
+        ".site-header",
+        ".site-footer",
+        ".page-header",
+        ".page-footer",
+        ".toc",
+        ".table-of-contents",
+        ".search",
+        ".search-box",
+        "#navigation",
+        "#nav",
+        "#navbar",
+        "#menu",
+        "#sidebar",
+        "#breadcrumb",
+        "#breadcrumbs",
+        "#footer",
+        "#header",
+        "#toc",
+        "#search",
     ];
 
     let cleaned_step1 = remove_elements(&document, remove_selectors);
@@ -226,23 +284,50 @@ fn clean_html(html: &str) -> String {
         "#main-content",
         "#content",
         ".content",
+        ".docs-content",
+        ".documentation",
+        ".page-content",
     ];
 
     for main_sel in &main_selectors {
-        if let Ok(selector) = Selector::parse(main_sel) {
-            if let Some(main_element) = document2.select(&selector).next() {
-                return main_element.html();
-            }
+        if let Ok(selector) = Selector::parse(main_sel)
+            && let Some(main_element) = document2.select(&selector).next() {
+            return main_element.html();
         }
     }
 
-    if let Ok(body_selector) = Selector::parse("body") {
-        if let Some(body) = document2.select(&body_selector).next() {
-            return body.html();
-        }
+    if let Ok(body_selector) = Selector::parse("body")
+        && let Some(body) = document2.select(&body_selector).next() {
+        return body.html();
     }
 
     cleaned_step2
+}
+
+fn clean_markdown(markdown: &str) -> String {
+    let mut result = markdown.to_string();
+
+    result = regex::Regex::new(r"\[\]\([^\)]*\)\[")
+        .unwrap()
+        .replace_all(&result, "[")
+        .to_string();
+
+    result = regex::Regex::new(r"\[\]\([^\)]*\)")
+        .unwrap()
+        .replace_all(&result, "")
+        .to_string();
+
+    result = regex::Regex::new(r"\[[\u{200B}\u{200C}\u{200D}\u{FEFF}]+\]")
+        .unwrap()
+        .replace_all(&result, "")
+        .to_string();
+
+    result = regex::Regex::new(r"\n{3,}")
+        .unwrap()
+        .replace_all(&result, "\n\n")
+        .to_string();
+
+    result
 }
 
 fn count_stats(content: &str) -> (usize, usize, usize) {
@@ -300,12 +385,16 @@ impl FetchServer {
 
         let has_llm_friendly = results.iter().any(|r| {
             let url_lower = r.url.to_lowercase();
-            url_lower.contains("/llms.txt") || url_lower.contains("/llms-full.txt") ||
-            r.is_markdown || url_lower.ends_with(".md")
+            #[allow(clippy::case_sensitive_file_extension_comparisons)]
+            {
+                url_lower.contains("/llms.txt") || url_lower.contains("/llms-full.txt") ||
+                r.is_markdown || url_lower.ends_with(".md")
+            }
         });
 
         for result in results {
             let url_lower = result.url.to_lowercase();
+            #[allow(clippy::case_sensitive_file_extension_comparisons)]
             let content_type = if url_lower.contains("/llms-full.txt") {
                 "llms-full"
             } else if url_lower.contains("/llms.txt") {
@@ -324,7 +413,8 @@ impl FetchServer {
 
             let content_to_save = if result.is_html && !result.is_markdown {
                 let cleaned = clean_html(&result.content);
-                html2md::parse_html(&cleaned)
+                let markdown = html2md::parse_html(&cleaned);
+                clean_markdown(&markdown)
             } else {
                 result.content.clone()
             };
