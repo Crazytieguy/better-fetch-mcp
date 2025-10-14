@@ -1,33 +1,34 @@
 # Better Fetch MCP Server
 
-A high-quality Model Context Protocol (MCP) server for fetching and caching web content, with intelligent URL variation detection and automatic HTML-to-Markdown conversion.
+A Model Context Protocol (MCP) server that fetches and caches web content as LLM-friendly Markdown files, with intelligent format detection and conservative HTML cleaning.
 
-## Features
+## Key Features
 
-- **Smart URL Variations**: Automatically tries multiple content variations:
-  - Original URL
-  - `.md` suffix
-  - `/index.md`
-  - `/llms.txt`
-  - `/llms-full.txt`
+### 🎯 Smart Format Detection (Primary Value)
+Automatically tries multiple LLM-friendly content variations:
+- `/llms-full.txt` - Comprehensive documentation
+- `/llms.txt` - Concise documentation
+- `.md` suffix - Markdown files
+- `/index.md` - Directory markdown
+- Original URL - Fallback
 
-- **Intelligent Caching**:
-  - Saves content to `.better-fetch-mcp/<domain>/<path>`
-  - Only saves HTML-to-Markdown if single HTML response received
-  - Preserves native Markdown when server returns it
-  - Saves all successful variations otherwise
-  - Automatic `.gitignore` creation on first use
+### 📦 File-Based Caching
+- Saves content to `.better-fetch-mcp/<domain>/<path>`
+- Returns file paths (not inline content)
+- LLMs can read, search, and analyze cached files
+- Automatic `.gitignore` creation
+- Optional custom cache directory
 
-- **Content Processing**:
-  - Prefers Markdown/text content via Accept headers
-  - Automatic HTML-to-Markdown conversion (only when needed)
-  - Detects and preserves Markdown content-type responses
-  - Returns file statistics (lines, words, characters)
-  - Concurrent fetching for optimal performance
+### 🧹 Conservative HTML Cleaning
+- Removes only clear navigation elements (nav, breadcrumbs, site headers/footers)
+- Preserves content over chrome (diagrams, code, tips, warnings, TOCs)
+- Converts HTML to Markdown only when needed
+- Philosophy: **Better to include too much than remove actual content**
 
-- **Configurable**:
-  - Optional custom cache directory via command-line argument
-  - Respects `.md` and `.txt` URLs (no variations tried)
+### ⚡ Performance
+- Concurrent fetching of URL variations
+- Prefers Markdown/text via Accept headers
+- Returns file statistics (lines, words, characters)
 
 ## Installation
 

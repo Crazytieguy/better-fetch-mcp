@@ -102,17 +102,15 @@ fn clean_html(html: &str) -> String {
     ];
 
     for main_sel in &main_selectors {
-        if let Ok(selector) = Selector::parse(main_sel) {
-            if let Some(main_element) = document2.select(&selector).next() {
-                return main_element.html();
-            }
+        if let Ok(selector) = Selector::parse(main_sel)
+            && let Some(main_element) = document2.select(&selector).next() {
+            return main_element.html();
         }
     }
 
-    if let Ok(body_selector) = Selector::parse("body") {
-        if let Some(body) = document2.select(&body_selector).next() {
-            return body.html();
-        }
+    if let Ok(body_selector) = Selector::parse("body")
+        && let Some(body) = document2.select(&body_selector).next() {
+        return body.html();
     }
 
     cleaned_step2
