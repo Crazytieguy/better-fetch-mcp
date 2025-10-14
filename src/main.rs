@@ -1,5 +1,6 @@
 #![warn(clippy::pedantic)]
 
+use regex::Regex;
 use rmcp::handler::server::tool::ToolRouter;
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::handler::server::ServerHandler;
@@ -8,7 +9,7 @@ use rmcp::{tool, tool_handler, tool_router, ErrorData as McpError, ServiceExt};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use tokio::fs;
 
 #[derive(Clone)]
@@ -111,16 +112,25 @@ fn url_to_path(base_dir: &Path, url: &str) -> Result<PathBuf, Box<dyn std::error
 
     let url_path = parsed.path().trim_start_matches('/');
 
+    // Security: Sanitize path components to prevent directory traversal
+    if !url_path.is_empty() {
+        for component in url_path.split('/') {
+            if component == ".." || component == "." {
+                return Err("Invalid path component in URL".into());
+            }
+            if !component.is_empty() {
+                path.push(component);
+            }
+        }
+    }
+
+    // Determine if we need to add an index file
     let needs_index = if url_path.is_empty() {
         true
     } else {
         let last_segment = url_path.split('/').next_back().unwrap_or("");
         Path::new(last_segment).extension().is_none()
     };
-
-    if !url_path.is_empty() {
-        path.push(url_path);
-    }
 
     if needs_index {
         path.push("index");
@@ -134,6 +144,13 @@ fn url_to_path(base_dir: &Path, url: &str) -> Result<PathBuf, Box<dyn std::error
             format!("{current_ext}?{query}")
         };
         path.set_extension(new_ext);
+    }
+
+    // Security: Verify final path is within base directory
+    let canonical_base = base_dir.canonicalize().unwrap_or_else(|_| base_dir.to_path_buf());
+    if let Some(parent) = path.parent()
+        && !parent.starts_with(&canonical_base) {
+        return Err("Path traversal detected".into());
     }
 
     Ok(path)
@@ -271,27 +288,29 @@ fn clean_html(html: &str) -> String {
 }
 
 fn clean_markdown(markdown: &str) -> String {
+    static EMPTY_LINK_BRACKET: OnceLock<Regex> = OnceLock::new();
+    static EMPTY_LINK: OnceLock<Regex> = OnceLock::new();
+    static ZERO_WIDTH_CHARS: OnceLock<Regex> = OnceLock::new();
+    static EXCESSIVE_NEWLINES: OnceLock<Regex> = OnceLock::new();
+
+    let empty_link_bracket = EMPTY_LINK_BRACKET.get_or_init(|| {
+        Regex::new(r"\[\]\([^\)]*\)\[").expect("Invalid regex pattern")
+    });
+    let empty_link = EMPTY_LINK.get_or_init(|| {
+        Regex::new(r"\[\]\([^\)]*\)").expect("Invalid regex pattern")
+    });
+    let zero_width = ZERO_WIDTH_CHARS.get_or_init(|| {
+        Regex::new(r"\[[\u{200B}\u{200C}\u{200D}\u{FEFF}]+\]").expect("Invalid regex pattern")
+    });
+    let excessive_newlines = EXCESSIVE_NEWLINES.get_or_init(|| {
+        Regex::new(r"\n{3,}").expect("Invalid regex pattern")
+    });
+
     let mut result = markdown.to_string();
-
-    result = regex::Regex::new(r"\[\]\([^\)]*\)\[")
-        .unwrap()
-        .replace_all(&result, "[")
-        .to_string();
-
-    result = regex::Regex::new(r"\[\]\([^\)]*\)")
-        .unwrap()
-        .replace_all(&result, "")
-        .to_string();
-
-    result = regex::Regex::new(r"\[[\u{200B}\u{200C}\u{200D}\u{FEFF}]+\]")
-        .unwrap()
-        .replace_all(&result, "")
-        .to_string();
-
-    result = regex::Regex::new(r"\n{3,}")
-        .unwrap()
-        .replace_all(&result, "\n\n")
-        .to_string();
+    result = empty_link_bracket.replace_all(&result, "[").to_string();
+    result = empty_link.replace_all(&result, "").to_string();
+    result = zero_width.replace_all(&result, "").to_string();
+    result = excessive_newlines.replace_all(&result, "\n\n").to_string();
 
     result
 }

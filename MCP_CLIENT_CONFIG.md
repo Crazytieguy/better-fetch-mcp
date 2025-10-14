@@ -35,7 +35,7 @@ Add this to your Claude Desktop configuration file:
 {
   "mcpServers": {
     "better-fetch": {
-      "command": "/Users/yoav/.cargo/bin/better-fetch-mcp"
+      "command": "better-fetch-mcp"
     }
   }
 }
@@ -47,7 +47,7 @@ Or with a custom cache directory:
 {
   "mcpServers": {
     "better-fetch": {
-      "command": "/Users/yoav/.cargo/bin/better-fetch-mcp",
+      "command": "better-fetch-mcp",
       "args": ["/path/to/custom/cache"]
     }
   }
@@ -62,7 +62,7 @@ Add to your Cursor settings:
 {
   "mcp.servers": {
     "better-fetch": {
-      "command": "/Users/yoav/.cargo/bin/better-fetch-mcp"
+      "command": "better-fetch-mcp"
     }
   }
 }

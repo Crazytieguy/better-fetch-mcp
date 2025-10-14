@@ -1,10 +1,10 @@
 # Better Fetch MCP Server
 
-A Model Context Protocol (MCP) server that fetches and caches web content as LLM-friendly Markdown files, with intelligent format detection and conservative HTML cleaning.
+Fetches and caches web content for LLMs, automatically discovering Markdown and text versions before falling back to HTML conversion.
 
 ## Key Features
 
-### 🎯 Smart Format Detection (Primary Value)
+### Smart Format Detection
 Automatically tries multiple LLM-friendly content variations:
 - `/llms-full.txt` - Comprehensive documentation
 - `/llms.txt` - Concise documentation
@@ -12,28 +12,48 @@ Automatically tries multiple LLM-friendly content variations:
 - `/index.md` - Directory markdown
 - Original URL - Fallback
 
-### 📦 File-Based Caching
+### File-Based Caching
 - Saves content to `.better-fetch-mcp/<domain>/<path>`
-- Returns file paths (not inline content)
+- Returns file paths for LLM access
 - LLMs can read, search, and analyze cached files
 - Automatic `.gitignore` creation
 - Optional custom cache directory
 
-### 🧹 Conservative HTML Cleaning
-- Removes only clear navigation elements (nav, breadcrumbs, site headers/footers)
-- Preserves content over chrome (diagrams, code, tips, warnings, TOCs)
+### Conservative HTML Cleaning
+- Removes clear navigation elements (nav, breadcrumbs, site headers/footers)
+- Preserves content over chrome (diagrams, code, tips, TOCs)
 - Converts HTML to Markdown only when needed
-- Philosophy: **Better to include too much than remove actual content**
 
-### ⚡ Performance
+### Performance
 - Concurrent fetching of URL variations
 - Prefers Markdown/text via Accept headers
 - Returns file statistics (lines, words, characters)
 
 ## Installation
 
+### via Shell Script (macOS/Linux)
 ```bash
-cargo build --release
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/Crazytieguy/better-fetch-mcp/releases/latest/download/better-fetch-mcp-installer.sh | sh
+```
+
+### via PowerShell (Windows)
+```powershell
+irm https://github.com/Crazytieguy/better-fetch-mcp/releases/latest/download/better-fetch-mcp-installer.ps1 | iex
+```
+
+### via Homebrew (macOS/Linux)
+```bash
+brew install Crazytieguy/tap/better-fetch-mcp
+```
+
+### via npm
+```bash
+npm install -g better-fetch-mcp
+```
+
+### via Cargo
+```bash
+cargo install better-fetch-mcp
 ```
 
 ## Usage
@@ -100,35 +120,13 @@ https://example.com/docs →
 - Saves each variation to its own file
 - Preserves original content format
 
-## Development
+## Configuration
 
-### Run Tests
-```bash
-# Unit tests
-cargo test
+See [MCP_CLIENT_CONFIG.md](MCP_CLIENT_CONFIG.md) for setup instructions for Claude Desktop, Claude Code, and Cursor IDE.
 
-# Integration tests (requires network)
-cargo test -- --ignored
+## Contributing
 
-# Test real website fetches
-cargo run --example test_fetch
-```
-
-### Code Quality
-```bash
-# Run clippy with pedantic lints
-cargo clippy --all-targets -- -D warnings
-
-# Format code
-cargo fmt
-```
-
-## Architecture
-
-- **Framework**: Built with `rmcp` (official Rust MCP SDK)
-- **HTTP Client**: `reqwest` with `rustls-tls`
-- **HTML Conversion**: `html2md`
-- **Async Runtime**: `tokio`
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 
 ## License
 
