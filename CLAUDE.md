@@ -16,4 +16,5 @@
 ## Releases
 - Update version in Cargo.toml and User-Agent strings
 - Commit features separately from version bumps
-- Create annotated tags (`git tag -a v0.x.y`) with detailed release notes
+- Create and push annotated tag (`git tag -a v0.x.y -m "Release v0.x.y" && git push origin v0.x.y`)
+- The automated workflow will create the GitHub release and publish to npm (don't create the release manually)
