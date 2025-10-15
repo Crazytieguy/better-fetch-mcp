@@ -1,6 +1,6 @@
 use std::fs;
-use std::process::{Command, Stdio};
 use std::io::Write;
+use std::process::{Command, Stdio};
 
 #[test]
 #[ignore] // Run with `cargo test -- --ignored`
@@ -41,7 +41,10 @@ fn test_fetch_convex_docs() {
 
     // Check that files were created
     let docs_convex_path = cache_dir.join("docs.convex.dev");
-    assert!(docs_convex_path.exists(), "Cache directory should be created");
+    assert!(
+        docs_convex_path.exists(),
+        "Cache directory should be created"
+    );
 
     // Check gitignore was created
     let gitignore = cache_dir.join(".gitignore");

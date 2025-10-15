@@ -29,7 +29,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         match client.get(url).send().await {
             Ok(response) => {
                 println!("  Status: {}", response.status());
-                println!("  Content-Type: {:?}", response.headers().get("content-type"));
+                println!(
+                    "  Content-Type: {:?}",
+                    response.headers().get("content-type")
+                );
 
                 if response.status().is_success() {
                     let body = response.text().await?;

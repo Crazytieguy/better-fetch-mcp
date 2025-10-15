@@ -75,7 +75,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(tools) = parsed["result"]["tools"].as_array() {
         println!("✓ Found {} tool(s):", tools.len());
         for tool in tools {
-            println!("  - {}: {}",
+            println!(
+                "  - {}: {}",
                 tool["name"].as_str().unwrap_or("unknown"),
                 tool["description"].as_str().unwrap_or("no description")
             );
@@ -108,7 +109,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("✓ Fetch successful! Cached {} file(s):", files_array.len());
             for file in files_array {
                 println!("  - {}", file["path"].as_str().unwrap_or("unknown"));
-                println!("    Lines: {}, Words: {}, Characters: {}",
+                println!(
+                    "    Lines: {}, Words: {}, Characters: {}",
                     file["lines"].as_u64().unwrap_or(0),
                     file["words"].as_u64().unwrap_or(0),
                     file["characters"].as_u64().unwrap_or(0)
@@ -127,7 +129,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for entry in walkdir::WalkDir::new(temp_dir.path()) {
         let entry = entry?;
         if entry.file_type().is_file() {
-            println!("  - {}", entry.path().strip_prefix(temp_dir.path())?.display());
+            println!(
+                "  - {}",
+                entry.path().strip_prefix(temp_dir.path())?.display()
+            );
         }
     }
 

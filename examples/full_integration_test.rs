@@ -1,6 +1,6 @@
-use tokio::fs;
 use std::path::PathBuf;
 use tempfile::TempDir;
+use tokio::fs;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -16,8 +16,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Test cases
     let test_cases = vec![
         ("Query params", "https://httpbin.org/get?test=value"),
-        ("Deep path", "https://developer.mozilla.org/en-US/docs/Web/JavaScript"),
-        (".md file", "https://raw.githubusercontent.com/anthropics/anthropic-sdk-python/main/README.md"),
+        (
+            "Deep path",
+            "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+        ),
+        (
+            ".md file",
+            "https://raw.githubusercontent.com/anthropics/anthropic-sdk-python/main/README.md",
+        ),
         (".txt file", "https://www.ietf.org/rfc/rfc2616.txt"),
     ];
 
@@ -31,8 +37,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 for result in results {
                     println!("  File: {}", result.file_path);
                     println!("    Content type: {}", result.content_type);
-                    println!("    Lines: {}, Words: {}, Chars: {}",
-                        result.lines, result.words, result.characters);
+                    println!(
+                        "    Lines: {}, Words: {}, Chars: {}",
+                        result.lines, result.words, result.characters
+                    );
                     if let Some(preview) = result.preview {
                         println!("    Preview: {}", preview);
                     }
@@ -60,7 +68,10 @@ struct FetchResult {
     preview: Option<String>,
 }
 
-async fn test_fetch(cache_dir: &std::path::Path, url: &str) -> Result<Vec<FetchResult>, Box<dyn std::error::Error>> {
+async fn test_fetch(
+    cache_dir: &std::path::Path,
+    url: &str,
+) -> Result<Vec<FetchResult>, Box<dyn std::error::Error>> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
         .build()?;
@@ -81,8 +92,12 @@ async fn test_fetch(cache_dir: &std::path::Path, url: &str) -> Result<Vec<FetchR
     let mut successful_fetches = Vec::new();
 
     for variation_url in &variations {
-        match client.get(variation_url)
-            .header("Accept", "text/markdown, text/x-markdown, text/plain, text/html;q=0.5, */*;q=0.1")
+        match client
+            .get(variation_url)
+            .header(
+                "Accept",
+                "text/markdown, text/x-markdown, text/plain, text/html;q=0.5, */*;q=0.1",
+            )
             .send()
             .await
         {
@@ -102,17 +117,18 @@ async fn test_fetch(cache_dir: &std::path::Path, url: &str) -> Result<Vec<FetchR
                     let file_path = url_to_path(cache_dir, variation_url)?;
 
                     // Determine content type label
-                    let content_type_label = if variation_url.to_lowercase().contains("/llms-full.txt") {
-                        "llms-full"
-                    } else if variation_url.to_lowercase().contains("/llms.txt") {
-                        "llms"
-                    } else if is_markdown || variation_url.to_lowercase().ends_with(".md") {
-                        "markdown"
-                    } else if is_html {
-                        "html-converted"
-                    } else {
-                        "text"
-                    };
+                    let content_type_label =
+                        if variation_url.to_lowercase().contains("/llms-full.txt") {
+                            "llms-full"
+                        } else if variation_url.to_lowercase().contains("/llms.txt") {
+                            "llms"
+                        } else if is_markdown || variation_url.to_lowercase().ends_with(".md") {
+                            "markdown"
+                        } else if is_html {
+                            "html-converted"
+                        } else {
+                            "text"
+                        };
 
                     // For HTML, we'd normally clean and convert, but for simplicity we'll just save as-is
                     let content_to_save = content.clone();
@@ -158,7 +174,10 @@ async fn test_fetch(cache_dir: &std::path::Path, url: &str) -> Result<Vec<FetchR
     Ok(successful_fetches)
 }
 
-fn url_to_path(base_dir: &std::path::Path, url: &str) -> Result<PathBuf, Box<dyn std::error::Error>> {
+fn url_to_path(
+    base_dir: &std::path::Path,
+    url: &str,
+) -> Result<PathBuf, Box<dyn std::error::Error>> {
     use url::Url;
 
     let parsed = Url::parse(url)?;

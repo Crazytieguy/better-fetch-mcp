@@ -28,9 +28,8 @@ fn simplify_images(html: &str) -> String {
 
             let role = img.value().attr("role").unwrap_or("");
 
-            let is_decorative = role == "presentation"
-                || role == "none"
-                || alt.is_empty() && src.contains("icon");
+            let is_decorative =
+                role == "presentation" || role == "none" || alt.is_empty() && src.contains("icon");
 
             let simple_img = if !is_decorative && !alt.is_empty() && !src.is_empty() {
                 format!("![{}]({})", alt, src)
@@ -103,13 +102,15 @@ fn clean_html(html: &str) -> String {
 
     for main_sel in &main_selectors {
         if let Ok(selector) = Selector::parse(main_sel)
-            && let Some(main_element) = document2.select(&selector).next() {
+            && let Some(main_element) = document2.select(&selector).next()
+        {
             return main_element.html();
         }
     }
 
     if let Ok(body_selector) = Selector::parse("body")
-        && let Some(body) = document2.select(&body_selector).next() {
+        && let Some(body) = document2.select(&body_selector).next()
+    {
         return body.html();
     }
 
@@ -150,10 +151,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ("vuejs.org-guide", "https://vuejs.org/guide"),
         ("python.org-tutorial", "https://docs.python.org/3/tutorial/"),
         ("rust-lang.org-book", "https://doc.rust-lang.org/book/"),
-        ("mdn-javascript", "https://developer.mozilla.org/en-US/docs/Web/JavaScript"),
+        (
+            "mdn-javascript",
+            "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+        ),
         ("nextjs.org-docs", "https://nextjs.org/docs"),
-        ("github-readme", "https://github.com/anthropics/anthropic-sdk-python"),
-        ("stackoverflow", "https://stackoverflow.com/questions/1732348/regex-match-open-tags-except-xhtml-self-contained-tags"),
+        (
+            "github-readme",
+            "https://github.com/anthropics/anthropic-sdk-python",
+        ),
+        (
+            "stackoverflow",
+            "https://stackoverflow.com/questions/1732348/regex-match-open-tags-except-xhtml-self-contained-tags",
+        ),
         ("wikipedia", "https://en.wikipedia.org/wiki/Markdown"),
     ];
 

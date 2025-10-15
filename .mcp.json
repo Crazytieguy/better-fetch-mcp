@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "llms-fetch": {
-      "command": "/Users/yoav/projects/llms-fetch-mcp/target/debug/llms-fetch-mcp"
+      "command": "./target/debug/llms-fetch-mcp"
     }
   }
 }
