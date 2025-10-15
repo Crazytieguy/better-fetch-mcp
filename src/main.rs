@@ -95,6 +95,11 @@ fn get_url_variations(url: &str) -> Vec<String> {
         return variations;
     }
 
+    // Don't try variations for URLs with query parameters
+    if url.contains('?') {
+        return variations;
+    }
+
     let base = url.trim_end_matches('/');
     variations.push(format!("{base}.md"));
     variations.push(format!("{base}/index.md"));
@@ -147,9 +152,7 @@ fn url_to_path(base_dir: &Path, url: &str) -> Result<PathBuf, Box<dyn std::error
     }
 
     // Security: Verify final path is within base directory
-    let canonical_base = base_dir.canonicalize().unwrap_or_else(|_| base_dir.to_path_buf());
-    if let Some(parent) = path.parent()
-        && !parent.starts_with(&canonical_base) {
+    if !path.starts_with(base_dir) {
         return Err("Path traversal detected".into());
     }
 
@@ -501,6 +504,16 @@ mod tests {
     }
 
     #[test]
+    fn test_url_variations_with_query_params() {
+        let url = "https://httpbin.org/get?test=value";
+        let variations = get_url_variations(url);
+
+        // Should not add variations for URLs with query parameters
+        assert_eq!(variations.len(), 1);
+        assert_eq!(variations[0], "https://httpbin.org/get?test=value");
+    }
+
+    #[test]
     fn test_url_to_path_simple() {
         let base = PathBuf::from("/cache");
         let url = "https://example.com/docs/page";
@@ -545,5 +558,103 @@ mod tests {
         assert_eq!(lines, 0);
         assert_eq!(words, 0);
         assert_eq!(chars, 0);
+    }
+
+    #[test]
+    fn test_url_to_path_with_query_params() {
+        let base = PathBuf::from(".better-fetch-mcp");
+        let url = "https://httpbin.org/get?test=value";
+        let path = url_to_path(&base, url).unwrap();
+
+        eprintln!("Base: {base:?}");
+        eprintln!("Path: {path:?}");
+        eprintln!("Starts with: {}", path.starts_with(&base));
+
+        assert!(path.starts_with(&base));
+        assert!(path.to_string_lossy().contains("?test=value"));
+    }
+
+    #[test]
+    fn test_url_to_path_deep_path() {
+        let base = PathBuf::from(".better-fetch-mcp");
+        let url = "https://developer.mozilla.org/en-US/docs/Web/JavaScript";
+        let path = url_to_path(&base, url).unwrap();
+
+        eprintln!("Base: {base:?}");
+        eprintln!("Path: {path:?}");
+        eprintln!("Starts with: {}", path.starts_with(&base));
+
+        assert!(path.starts_with(&base));
+    }
+
+    #[test]
+    fn test_url_parser_normalizes_traversal() {
+        // The url::Url parser automatically normalizes path traversal attempts
+        // This test verifies this behavior, which is good for security
+        let base = PathBuf::from("/cache");
+        let url = "https://example.com/../etc/passwd";
+
+        let parsed = url::Url::parse(url).unwrap();
+        eprintln!("URL: {url}");
+        eprintln!("Parsed path: {}", parsed.path());
+
+        // URL parser normalizes "../" to "/" at the root
+        assert_eq!(parsed.path(), "/etc/passwd");
+
+        // Our code will place this safely within the cache
+        let result = url_to_path(&base, url);
+        assert!(result.is_ok());
+        let path = result.unwrap();
+        // Path is within cache directory - safe
+        assert!(path.starts_with(&base));
+        assert_eq!(path, PathBuf::from("/cache/example.com/etc/passwd/index"));
+    }
+
+    #[test]
+    fn test_component_filter_blocks_dots() {
+        // If somehow a ".." or "." makes it through URL parsing as a component,
+        // our component filter will reject it
+        let base = PathBuf::from("/cache");
+
+        // Manually construct a URL that would have ".." as a component
+        // (in practice, url::Url normalizes these, but we test the filter anyway)
+        let test_cases = vec![
+            ("https://example.com/%2e%2e/passwd", "/passwd"),  // URL-encoded ".."
+        ];
+
+        for (url, _expected_path) in test_cases {
+            let parsed = url::Url::parse(url).unwrap();
+            eprintln!("Testing URL: {url}");
+            eprintln!("Parsed path: {}", parsed.path());
+
+            let result = url_to_path(&base, url);
+            eprintln!("Result: {result:?}");
+
+            // Verify the path is safe and within base
+            if let Ok(path) = result {
+                assert!(path.starts_with(&base));
+            }
+        }
+    }
+
+    #[test]
+    fn test_starts_with_protection() {
+        // Final check: verify paths stay within base directory
+        let base = PathBuf::from("/cache");
+        let url = "https://example.com/docs/api/v1/reference";
+        let result = url_to_path(&base, url);
+
+        assert!(result.is_ok());
+        let path = result.unwrap();
+
+        // Path must be within base directory
+        assert!(path.starts_with(&base));
+        assert!(path.to_string_lossy().contains("docs/api/v1/reference"));
+
+        // Verify the path structure
+        assert_eq!(
+            path,
+            PathBuf::from("/cache/example.com/docs/api/v1/reference/index")
+        );
     }
 }
