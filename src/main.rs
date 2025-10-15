@@ -121,6 +121,16 @@ fn get_url_variations(url: &str) -> Vec<String> {
 
     let base = url.trim_end_matches('/');
 
+    // Check if URL has a file extension (to avoid file/directory conflicts)
+    let has_file_extension = if let Ok(parsed) = url::Url::parse(url) {
+        let path = parsed.path();
+        path.rsplit_once('/').is_some_and(|(_, last)| {
+            last.contains('.') && !last.ends_with('.')
+        })
+    } else {
+        false
+    };
+
     // Check if this is a GitHub URL by parsing the domain
     let is_github = if let Ok(parsed) = url::Url::parse(url) {
         parsed.domain() == Some("github.com")
@@ -129,9 +139,7 @@ fn get_url_variations(url: &str) -> Vec<String> {
     };
 
     // For GitHub URLs, try converting to raw.githubusercontent.com
-    if is_github
-        && let Ok(parsed) = url::Url::parse(url)
-    {
+    if is_github && let Ok(parsed) = url::Url::parse(url) {
         let path = parsed.path();
         // GitHub URL format: /owner/repo/tree/branch/path or /owner/repo/blob/branch/path
         let parts: Vec<&str> = path.trim_start_matches('/').split('/').collect();
@@ -172,12 +180,17 @@ fn get_url_variations(url: &str) -> Vec<String> {
     }
 
     variations.push(format!("{base}.md"));
-    if is_github {
-        variations.push(format!("{base}/README.md"));
+
+    // Only add directory-based variations if URL doesn't have a file extension
+    // This prevents file/directory conflicts (e.g., npm.html file vs npm.html/ directory)
+    if !has_file_extension {
+        if is_github {
+            variations.push(format!("{base}/README.md"));
+        }
+        variations.push(format!("{base}/index.md"));
+        variations.push(format!("{base}/llms.txt"));
+        variations.push(format!("{base}/llms-full.txt"));
     }
-    variations.push(format!("{base}/index.md"));
-    variations.push(format!("{base}/llms.txt"));
-    variations.push(format!("{base}/llms-full.txt"));
 
     variations
 }
@@ -403,14 +416,12 @@ impl FetchServer {
     fn new(cache_dir: Option<PathBuf>) -> Self {
         let cache_path = cache_dir.unwrap_or_else(|| PathBuf::from(".llms-fetch-mcp"));
         // Ensure cache_dir is absolute for security (prevents relative path bypass)
-        let absolute_cache = cache_path
-            .canonicalize()
-            .unwrap_or_else(|_| {
-                // If path doesn't exist, make it absolute relative to current dir
-                std::env::current_dir()
-                    .unwrap_or_else(|_| PathBuf::from("/tmp"))
-                    .join(&cache_path)
-            });
+        let absolute_cache = cache_path.canonicalize().unwrap_or_else(|_| {
+            // If path doesn't exist, make it absolute relative to current dir
+            std::env::current_dir()
+                .unwrap_or_else(|_| PathBuf::from("/tmp"))
+                .join(&cache_path)
+        });
 
         Self {
             cache_dir: Arc::new(absolute_cache),
@@ -802,29 +813,33 @@ mod tests {
     #[test]
     fn test_url_variations_github_blob() {
         // Test that /blob/ URLs get converted to raw.githubusercontent.com
-        // Note: Can't use .md extension as those return early (no variations)
+        // Note: .rs extension prevents directory-based variations (file/directory conflict prevention)
         let url = "https://github.com/user/repo/blob/main/src/lib.rs";
         let variations = get_url_variations(url);
 
-        // Should have: original + raw + .md + README.md + index.md + llms.txt + llms-full.txt = 7
-        assert_eq!(variations.len(), 7);
-        assert_eq!(variations[0], "https://github.com/user/repo/blob/main/src/lib.rs");
+        // Should have: original + raw + .md (no directory variations due to .rs extension)
+        assert_eq!(variations.len(), 3);
+        assert_eq!(
+            variations[0],
+            "https://github.com/user/repo/blob/main/src/lib.rs"
+        );
         assert_eq!(
             variations[1],
             "https://raw.githubusercontent.com/user/repo/main/src/lib.rs"
         );
-        // Standard variations also added
-        assert_eq!(variations[2], "https://github.com/user/repo/blob/main/src/lib.rs.md");
-        assert_eq!(variations[3], "https://github.com/user/repo/blob/main/src/lib.rs/README.md");
+        assert_eq!(
+            variations[2],
+            "https://github.com/user/repo/blob/main/src/lib.rs.md"
+        );
     }
 
     #[test]
     fn test_url_variations_github_malformed() {
         // Test that malformed GitHub URLs don't panic
         let urls = vec![
-            "https://github.com/user",           // Too few segments
-            "https://github.com/user/repo",       // No tree/blob
-            "https://github.com",                 // Root
+            "https://github.com/user",      // Too few segments
+            "https://github.com/user/repo", // No tree/blob
+            "https://github.com",           // Root
         ];
 
         for url in urls {
@@ -846,7 +861,11 @@ mod tests {
         let path_str1 = path1.to_string_lossy();
         assert!(path1.starts_with(&base));
         // Slashes in query should be replaced with underscores
-        assert!(path_str1.contains("path=.._etc_passwd"), "Path was: {}", path_str1);
+        assert!(
+            path_str1.contains("path=.._etc_passwd"),
+            "Path was: {}",
+            path_str1
+        );
 
         // Test that other unsafe chars (colons, question marks, etc.) get sanitized
         let url2 = "https://example.com/api?name=file:name?test";
@@ -854,7 +873,11 @@ mod tests {
         let path_str2 = path2.to_string_lossy();
         assert!(path2.starts_with(&base));
         // Colons and question marks should be replaced with underscores
-        assert!(path_str2.contains("file_name_test"), "Path was: {}", path_str2);
+        assert!(
+            path_str2.contains("file_name_test"),
+            "Path was: {}",
+            path_str2
+        );
 
         // Test that backslashes in query params get sanitized
         let url3 = "https://example.com/api?path=..\\etc\\passwd";
@@ -862,6 +885,10 @@ mod tests {
         let path_str3 = path3.to_string_lossy();
         assert!(path3.starts_with(&base));
         // Backslashes should be replaced with underscores
-        assert!(path_str3.contains("path=.._etc_passwd"), "Path was: {}", path_str3);
+        assert!(
+            path_str3.contains("path=.._etc_passwd"),
+            "Path was: {}",
+            path_str3
+        );
     }
 }
