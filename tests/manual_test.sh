@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Manual test script for better-fetch-mcp
+# Manual test script for llms-fetch-mcp
 # This tests real website fetches
 
 set -e
 
-CACHE_DIR="/tmp/better-fetch-test-$$"
+CACHE_DIR="/tmp/llms-fetch-test-$$"
 
-echo "Testing better-fetch-mcp..."
+echo "Testing llms-fetch-mcp..."
 echo "Cache directory: $CACHE_DIR"
 
 # Build the project
@@ -16,13 +16,13 @@ cargo build --release
 # Test 1: Fetch docs.convex.dev
 echo ""
 echo "Test 1: Fetching https://docs.convex.dev/"
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | ./target/release/better-fetch-mcp "$CACHE_DIR" > /dev/null 2>&1 &
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | ./target/release/llms-fetch-mcp "$CACHE_DIR" > /dev/null 2>&1 &
 PID=$!
 sleep 1
 
-echo '{"jsonrpc":"2.0","method":"notifications/initialized"}' | ./target/release/better-fetch-mcp "$CACHE_DIR" > /dev/null 2>&1
+echo '{"jsonrpc":"2.0","method":"notifications/initialized"}' | ./target/release/llms-fetch-mcp "$CACHE_DIR" > /dev/null 2>&1
 
-echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"fetch","arguments":{"url":"https://docs.convex.dev/"}}}' | ./target/release/better-fetch-mcp "$CACHE_DIR"
+echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"fetch","arguments":{"url":"https://docs.convex.dev/"}}}' | ./target/release/llms-fetch-mcp "$CACHE_DIR"
 
 kill $PID 2>/dev/null || true
 

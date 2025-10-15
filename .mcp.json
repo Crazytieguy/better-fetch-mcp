@@ -1,7 +1,7 @@
 {
   "mcpServers": {
-    "better-fetch": {
-      "command": "/Users/yoav/projects/better-fetch-mcp/target/debug/better-fetch-mcp"
+    "llms-fetch": {
+      "command": "/Users/yoav/projects/llms-fetch-mcp/target/debug/llms-fetch-mcp"
     }
   }
 }

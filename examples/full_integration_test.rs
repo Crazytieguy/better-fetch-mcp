@@ -4,7 +4,7 @@ use tempfile::TempDir;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Full Integration Test for better-fetch-mcp");
+    println!("Full Integration Test for llms-fetch-mcp");
     println!("{}", "=".repeat(70));
     println!();
 

@@ -5,7 +5,7 @@ use std::path::PathBuf;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Simulating MCP fetch operations...\n");
 
-    let test_cache = PathBuf::from("/tmp/better-fetch-mcp-simulation");
+    let test_cache = PathBuf::from("/tmp/llms-fetch-mcp-simulation");
 
     // Clean up
     if test_cache.exists() {

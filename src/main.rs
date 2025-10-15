@@ -329,7 +329,7 @@ fn count_stats(content: &str) -> (usize, usize, usize) {
 impl FetchServer {
     fn new(cache_dir: Option<PathBuf>) -> Self {
         Self {
-            cache_dir: Arc::new(cache_dir.unwrap_or_else(|| PathBuf::from(".better-fetch-mcp"))),
+            cache_dir: Arc::new(cache_dir.unwrap_or_else(|| PathBuf::from(".llms-fetch-mcp"))),
             tool_router: Self::tool_router(),
         }
     }
@@ -562,7 +562,7 @@ mod tests {
 
     #[test]
     fn test_url_to_path_with_query_params() {
-        let base = PathBuf::from(".better-fetch-mcp");
+        let base = PathBuf::from(".llms-fetch-mcp");
         let url = "https://httpbin.org/get?test=value";
         let path = url_to_path(&base, url).unwrap();
 
@@ -576,7 +576,7 @@ mod tests {
 
     #[test]
     fn test_url_to_path_deep_path() {
-        let base = PathBuf::from(".better-fetch-mcp");
+        let base = PathBuf::from(".llms-fetch-mcp");
         let url = "https://developer.mozilla.org/en-US/docs/Web/JavaScript";
         let path = url_to_path(&base, url).unwrap();
 

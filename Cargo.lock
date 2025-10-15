@@ -69,24 +69,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
-name = "better-fetch-mcp"
-version = "0.1.0"
-dependencies = [
- "html2md",
- "regex",
- "reqwest",
- "rmcp",
- "schemars",
- "scraper",
- "serde",
- "serde_json",
- "tempfile",
- "tokio",
- "url",
- "walkdir",
-]
-
-[[package]]
 name = "bitflags"
 version = "2.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -929,6 +911,24 @@ name = "litemap"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "241eaef5fd12c88705a01fc1066c48c4b36e0dd4377dcdc7ec3942cea7a69956"
+
+[[package]]
+name = "llms-fetch-mcp"
+version = "0.1.0"
+dependencies = [
+ "html2md",
+ "regex",
+ "reqwest",
+ "rmcp",
+ "schemars",
+ "scraper",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "url",
+ "walkdir",
+]
 
 [[package]]
 name = "lock_api"

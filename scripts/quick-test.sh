@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Quick test script for better-fetch-mcp
+# Quick test script for llms-fetch-mcp
 # Tests the MCP server with a simple HTTP request
 #
 
@@ -14,7 +14,7 @@ echo "Testing fetch functionality..."
 echo ""
 
 # Create a temp directory
-TEMP_CACHE="/tmp/better-fetch-test-$$"
+TEMP_CACHE="/tmp/llms-fetch-test-$$"
 
 echo "Cache directory: $TEMP_CACHE"
 echo ""
@@ -35,7 +35,7 @@ echo "Fetching https://httpbin.org/html..."
     # Call fetch tool
     echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"fetch","arguments":{"url":"https://httpbin.org/html"}}}'
     sleep 2
-} | ./target/release/better-fetch-mcp "$TEMP_CACHE" 2>&1 | head -20
+} | ./target/release/llms-fetch-mcp "$TEMP_CACHE" 2>&1 | head -20
 
 echo ""
 echo "Checking cached files..."
@@ -53,6 +53,6 @@ echo ""
 echo "Test complete!"
 echo ""
 echo "To run the server:"
-echo "  ./target/release/better-fetch-mcp [cache-dir]"
+echo "  ./target/release/llms-fetch-mcp [cache-dir]"
 echo ""
-echo "Default cache directory: .better-fetch-mcp"
+echo "Default cache directory: .llms-fetch-mcp"

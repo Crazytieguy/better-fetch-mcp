@@ -68,16 +68,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     // Test 1: URL with query parameters
-    test_url_to_path(".better-fetch-mcp", "https://httpbin.org/get?test=value")?;
+    test_url_to_path(".llms-fetch-mcp", "https://httpbin.org/get?test=value")?;
 
     // Test 2: Deep path
-    test_url_to_path(".better-fetch-mcp", "https://developer.mozilla.org/en-US/docs/Web/JavaScript")?;
+    test_url_to_path(".llms-fetch-mcp", "https://developer.mozilla.org/en-US/docs/Web/JavaScript")?;
 
     // Test 3: URL ending in .md
-    test_url_to_path(".better-fetch-mcp", "https://raw.githubusercontent.com/anthropics/anthropic-sdk-python/main/README.md")?;
+    test_url_to_path(".llms-fetch-mcp", "https://raw.githubusercontent.com/anthropics/anthropic-sdk-python/main/README.md")?;
 
     // Test 4: URL ending in .txt
-    test_url_to_path(".better-fetch-mcp", "https://www.ietf.org/rfc/rfc2616.txt")?;
+    test_url_to_path(".llms-fetch-mcp", "https://www.ietf.org/rfc/rfc2616.txt")?;
 
     println!("{}", "=".repeat(60));
     println!("All edge case tests passed!");

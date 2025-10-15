@@ -10,7 +10,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "https://httpbin.org/html",
     ];
 
-    let cache_dir = PathBuf::from("/tmp/better-fetch-test");
+    let cache_dir = PathBuf::from("/tmp/llms-fetch-test");
 
     // Clean up any existing cache
     if cache_dir.exists() {
