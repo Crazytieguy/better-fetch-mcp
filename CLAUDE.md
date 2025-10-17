@@ -18,3 +18,4 @@
 - Commit features separately from version bumps
 - Create and push annotated tag (`git tag -a v0.x.y -m "Release v0.x.y" && git push origin v0.x.y`)
 - The automated workflow will create the GitHub release and publish to npm (don't create the release manually)
+- When releasing a version, bump the patch version unless told otherwise
