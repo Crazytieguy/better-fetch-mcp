@@ -1,6 +1,6 @@
 #![warn(clippy::pedantic)]
 
-use regex::Regex;
+use dom_smoothie::{Config, Readability, TextMode};
 use rmcp::handler::server::ServerHandler;
 use rmcp::handler::server::tool::ToolRouter;
 use rmcp::handler::server::wrapper::Parameters;
@@ -8,8 +8,9 @@ use rmcp::model::{Implementation, ProtocolVersion, ServerCapabilities, ServerInf
 use rmcp::{ErrorData as McpError, ServiceExt, tool, tool_handler, tool_router};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 use tokio::fs;
 
 #[derive(Clone)]
@@ -124,69 +125,17 @@ fn get_url_variations(url: &str) -> Vec<String> {
     // Check if URL has a file extension (to avoid file/directory conflicts)
     let has_file_extension = if let Ok(parsed) = url::Url::parse(url) {
         let path = parsed.path();
-        path.rsplit_once('/').is_some_and(|(_, last)| {
-            last.contains('.') && !last.ends_with('.')
-        })
+        path.rsplit_once('/')
+            .is_some_and(|(_, last)| last.contains('.') && !last.ends_with('.'))
     } else {
         false
     };
-
-    // Check if this is a GitHub URL by parsing the domain
-    let is_github = if let Ok(parsed) = url::Url::parse(url) {
-        parsed.domain() == Some("github.com")
-    } else {
-        false
-    };
-
-    // For GitHub URLs, try converting to raw.githubusercontent.com
-    if is_github && let Ok(parsed) = url::Url::parse(url) {
-        let path = parsed.path();
-        // GitHub URL format: /owner/repo/tree/branch/path or /owner/repo/blob/branch/path
-        let parts: Vec<&str> = path.trim_start_matches('/').split('/').collect();
-
-        // Handle /blob/ URLs - convert directly to raw
-        if parts.len() >= 4 && parts[2] == "blob" {
-            let owner = parts[0];
-            let repo = parts[1];
-            // Everything after /blob/ is branch/path, but we can't reliably split them
-            // For single-segment branch names (most common), this works
-            let branch_and_path = parts[3..].join("/");
-            variations.push(format!(
-                "https://raw.githubusercontent.com/{owner}/{repo}/{branch_and_path}"
-            ));
-        }
-
-        // Handle /tree/ URLs - add README.md
-        if parts.len() >= 4 && parts[2] == "tree" {
-            let owner = parts[0];
-            let repo = parts[1];
-            // Assume first segment after /tree/ is branch name (works for most cases)
-            // Limitation: Won't work for branch names with slashes like "feature/auth"
-            let branch = parts[3];
-            let subpath = if parts.len() > 4 {
-                parts[4..].join("/")
-            } else {
-                String::new()
-            };
-
-            let raw_base = if subpath.is_empty() {
-                format!("https://raw.githubusercontent.com/{owner}/{repo}/{branch}")
-            } else {
-                format!("https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{subpath}")
-            };
-
-            variations.push(format!("{raw_base}/README.md"));
-        }
-    }
 
     variations.push(format!("{base}.md"));
 
     // Only add directory-based variations if URL doesn't have a file extension
     // This prevents file/directory conflicts (e.g., npm.html file vs npm.html/ directory)
     if !has_file_extension {
-        if is_github {
-            variations.push(format!("{base}/README.md"));
-        }
         variations.push(format!("{base}/index.md"));
         variations.push(format!("{base}/llms.txt"));
         variations.push(format!("{base}/llms-full.txt"));
@@ -258,150 +207,29 @@ async fn ensure_gitignore(base_dir: &Path) -> Result<(), Box<dyn std::error::Err
     Ok(())
 }
 
-fn remove_elements(document: &scraper::Html, selectors: &[&str]) -> String {
-    let mut cleaned = document.html();
-
-    for selector_str in selectors {
-        if let Ok(selector) = scraper::Selector::parse(selector_str) {
-            for element in document.select(&selector) {
-                let elem_html = element.html();
-                cleaned = cleaned.replace(&elem_html, "");
-            }
-        }
+fn html_to_markdown(html: &str, document_url: &str) -> Result<String, Box<dyn std::error::Error>> {
+    if html.trim().is_empty() {
+        return Err("HTML content is empty".into());
     }
 
-    cleaned
-}
+    // Step 1: Use dom_smoothie's Readability to clean the HTML
+    let cfg = Config {
+        text_mode: TextMode::Raw, // We only need the cleaned HTML, not text extraction
+        ..Default::default()
+    };
 
-fn simplify_images(html: &str) -> String {
-    use scraper::{Html, Selector};
+    let mut readability = Readability::new(html, Some(document_url), Some(cfg))?;
+    let article = readability.parse()?;
 
-    let document = Html::parse_document(html);
-    let mut result = html.to_string();
+    // Step 2: Convert cleaned HTML to markdown using html2md
+    let cleaned_html = article.content.to_string();
+    let markdown = html2md::parse_html(&cleaned_html);
 
-    if let Ok(img_selector) = Selector::parse("img") {
-        for img in document.select(&img_selector) {
-            let img_html = img.html();
-
-            let alt = img.value().attr("alt").unwrap_or("");
-            let src = img.value().attr("src").unwrap_or("");
-
-            let role = img.value().attr("role").unwrap_or("");
-
-            let is_decorative =
-                role == "presentation" || role == "none" || alt.is_empty() && src.contains("icon");
-
-            let simple_img = if !is_decorative && !alt.is_empty() && !src.is_empty() {
-                format!("![{alt}]({src})")
-            } else if !is_decorative && !src.is_empty() {
-                format!("![image]({src})")
-            } else {
-                String::new()
-            };
-
-            result = result.replace(&img_html, &simple_img);
-        }
+    if markdown.trim().is_empty() {
+        return Err("Extracted content is empty (page may have no readable content)".into());
     }
 
-    result
-}
-
-fn clean_html(html: &str) -> String {
-    use scraper::{Html, Selector};
-
-    let document = Html::parse_document(html);
-
-    let remove_selectors = &[
-        "script",
-        "style",
-        "noscript",
-        "iframe",
-        "nav",
-        "[role=banner]",
-        "[role=navigation]",
-        "[role=contentinfo]",
-        "[role=complementary]",
-        "[role=search]",
-        "[aria-label*=navigation]",
-        "[aria-label*=Navigation]",
-        "[aria-label*=breadcrumb]",
-        "[aria-label*=Breadcrumb]",
-        "[aria-label*=search]",
-        "[aria-label*=Search]",
-        ".navigation",
-        ".nav",
-        ".navbar",
-        ".nav-bar",
-        ".site-header",
-        ".site-footer",
-        ".page-header",
-        ".page-footer",
-        ".breadcrumb",
-        ".breadcrumbs",
-        "#navigation",
-        "#nav",
-        "#navbar",
-        "#breadcrumb",
-        "#breadcrumbs",
-    ];
-
-    let cleaned_step1 = remove_elements(&document, remove_selectors);
-    let cleaned_step2 = simplify_images(&cleaned_step1);
-    let document2 = Html::parse_document(&cleaned_step2);
-
-    let main_selectors = [
-        ".markdown-body",
-        "main",
-        "[role=main]",
-        ".main-content",
-        "#main-content",
-        "#content",
-        ".content",
-        ".docs-content",
-        ".documentation",
-        ".page-content",
-    ];
-
-    for main_sel in &main_selectors {
-        if let Ok(selector) = Selector::parse(main_sel)
-            && let Some(main_element) = document2.select(&selector).next()
-        {
-            return main_element.html();
-        }
-    }
-
-    if let Ok(body_selector) = Selector::parse("body")
-        && let Some(body) = document2.select(&body_selector).next()
-    {
-        return body.html();
-    }
-
-    cleaned_step2
-}
-
-fn clean_markdown(markdown: &str) -> String {
-    static EMPTY_LINK_BRACKET: OnceLock<Regex> = OnceLock::new();
-    static EMPTY_LINK: OnceLock<Regex> = OnceLock::new();
-    static ZERO_WIDTH_CHARS: OnceLock<Regex> = OnceLock::new();
-    static EXCESSIVE_NEWLINES: OnceLock<Regex> = OnceLock::new();
-
-    let empty_link_bracket = EMPTY_LINK_BRACKET
-        .get_or_init(|| Regex::new(r"\[\]\([^\)]*\)\[").expect("Invalid regex pattern"));
-    let empty_link =
-        EMPTY_LINK.get_or_init(|| Regex::new(r"\[\]\([^\)]*\)").expect("Invalid regex pattern"));
-    let zero_width = ZERO_WIDTH_CHARS.get_or_init(|| {
-        Regex::new(r"\[[\u{200B}\u{200C}\u{200D}\u{FEFF}]+\]").expect("Invalid regex pattern")
-    });
-    let excessive_newlines =
-        EXCESSIVE_NEWLINES.get_or_init(|| Regex::new(r"\n{3,}").expect("Invalid regex pattern"));
-
-    let mut result = markdown.to_string();
-    result = empty_link_bracket.replace_all(&result, "[").to_string();
-    result = empty_link.replace_all(&result, "").to_string();
-    result = zero_width.replace_all(&result, "").to_string();
-    result = excessive_newlines.replace_all(&result, "\n\n").to_string();
-
-    result
+    Ok(markdown)
 }
 
 fn count_stats(content: &str) -> (usize, usize, usize) {
@@ -430,7 +258,7 @@ impl FetchServer {
     }
 
     #[tool(
-        description = "Fetch web content and cache it locally with intelligent format detection. For best results, start with the root URL of a documentation site (e.g., https://docs.example.com) to discover llms.txt or llms-full.txt files, which provide LLM-optimized documentation structure. The tool automatically tries multiple format variations (.md, /README.md for GitHub, /index.md, /llms.txt, /llms-full.txt) concurrently. HTML is automatically cleaned and converted to Markdown. Returns cached file paths with content type and statistics."
+        description = "Fetch web content and cache it locally with intelligent format detection. For best results, start with the root URL of a documentation site (e.g., https://docs.example.com) to discover llms.txt or llms-full.txt files, which provide LLM-optimized documentation structure. For GitHub, prefer raw.githubusercontent.com URLs. The tool automatically tries multiple format variations (.md, /index.md, /llms.txt, /llms-full.txt) concurrently. HTML is automatically cleaned and converted to Markdown. Returns cached file paths with content type and statistics."
     )]
     async fn fetch(
         &self,
@@ -490,6 +318,7 @@ impl FetchServer {
         })?;
 
         let mut file_infos = Vec::new();
+        let mut seen_content: HashSet<String> = HashSet::new();
 
         let has_non_html = results.iter().any(|r| !r.is_html);
 
@@ -512,12 +341,21 @@ impl FetchServer {
             }
 
             let content_to_save = if result.is_html && !result.is_markdown {
-                let cleaned = clean_html(&result.content);
-                let markdown = html2md::parse_html(&cleaned);
-                clean_markdown(&markdown)
+                html_to_markdown(&result.content, &result.url).map_err(|e| {
+                    McpError::internal_error(
+                        format!("Failed to convert HTML to markdown: {e}"),
+                        None,
+                    )
+                })?
             } else {
                 result.content.clone()
             };
+
+            // Deduplicate content by comparing full strings
+            if !seen_content.insert(content_to_save.clone()) {
+                // Already seen this content, skip it
+                continue;
+            }
 
             let file_path = url_to_path(&self.cache_dir, &result.url)
                 .map_err(|e| McpError::internal_error(format!("Failed to parse URL: {e}"), None))?;
@@ -560,7 +398,7 @@ impl ServerHandler for FetchServer {
             capabilities: ServerCapabilities::builder().enable_tools().build(),
             server_info: Implementation::from_build_env(),
             instructions: Some(
-                "Web content fetcher with intelligent format detection for documentation. Tries multiple URL variations (.md, /index.md, /llms.txt, /llms-full.txt) concurrently. Cleans HTML and converts to Markdown. Deduplicates content automatically."
+                "Web content fetcher with intelligent format detection for documentation. Cleans HTML and converts to Markdown. Deduplicates content automatically."
                     .to_string(),
             ),
         }
@@ -609,30 +447,22 @@ mod tests {
         let url = "https://github.com/user/repo/tree/main/docs";
         let variations = get_url_variations(url);
 
-        assert_eq!(variations.len(), 7);
+        assert_eq!(variations.len(), 5);
         assert_eq!(variations[0], "https://github.com/user/repo/tree/main/docs");
         assert_eq!(
             variations[1],
-            "https://raw.githubusercontent.com/user/repo/main/docs/README.md"
-        );
-        assert_eq!(
-            variations[2],
             "https://github.com/user/repo/tree/main/docs.md"
         );
         assert_eq!(
-            variations[3],
-            "https://github.com/user/repo/tree/main/docs/README.md"
-        );
-        assert_eq!(
-            variations[4],
+            variations[2],
             "https://github.com/user/repo/tree/main/docs/index.md"
         );
         assert_eq!(
-            variations[5],
+            variations[3],
             "https://github.com/user/repo/tree/main/docs/llms.txt"
         );
         assert_eq!(
-            variations[6],
+            variations[4],
             "https://github.com/user/repo/tree/main/docs/llms-full.txt"
         );
     }
@@ -812,23 +642,18 @@ mod tests {
 
     #[test]
     fn test_url_variations_github_blob() {
-        // Test that /blob/ URLs get converted to raw.githubusercontent.com
         // Note: .rs extension prevents directory-based variations (file/directory conflict prevention)
         let url = "https://github.com/user/repo/blob/main/src/lib.rs";
         let variations = get_url_variations(url);
 
-        // Should have: original + raw + .md (no directory variations due to .rs extension)
-        assert_eq!(variations.len(), 3);
+        // Should have: original + .md (no directory variations due to .rs extension)
+        assert_eq!(variations.len(), 2);
         assert_eq!(
             variations[0],
             "https://github.com/user/repo/blob/main/src/lib.rs"
         );
         assert_eq!(
             variations[1],
-            "https://raw.githubusercontent.com/user/repo/main/src/lib.rs"
-        );
-        assert_eq!(
-            variations[2],
             "https://github.com/user/repo/blob/main/src/lib.rs.md"
         );
     }

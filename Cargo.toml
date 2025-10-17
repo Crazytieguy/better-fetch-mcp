@@ -10,12 +10,11 @@ keywords = ["mcp", "llmstxt", "llms-txt", "markdown", "llm"]
 categories = ["command-line-utilities", "web-programming"]
 
 [dependencies]
+dom_smoothie = "0.13.0"
 html2md = "0.2.15"
-regex = "1.11.1"
 reqwest = { version = "0.12.23", features = ["rustls-tls", "blocking"] }
 rmcp = "0.8.0"
 schemars = { version = "1.0.4", features = ["derive"] }
-scraper = "0.24.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 tokio = { version = "1.47.1", features = ["full"] }
