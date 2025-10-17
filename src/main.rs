@@ -64,7 +64,7 @@ async fn fetch_url(client: &reqwest::Client, url: &str) -> FetchAttempt {
         )
         .header(
             "User-Agent",
-            "llms-fetch-mcp/0.1.1 (+https://github.com/crazytieguy/llms-fetch-mcp)",
+            "llms-fetch-mcp/0.1.2 (+https://github.com/crazytieguy/llms-fetch-mcp)",
         )
         .send()
         .await
