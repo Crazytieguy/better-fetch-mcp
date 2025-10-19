@@ -1,5 +1,0 @@
----
-source: src/toc.rs
-expression: toc.unwrap_or_default()
----
-

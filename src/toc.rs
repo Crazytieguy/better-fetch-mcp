@@ -481,20 +481,18 @@ mod tests {
         assert_eq!(headings[0].text, "# Multiple bold and italic parts");
     }
 
-    // Snapshot tests
-    mod snapshots {
-        use super::*;
+    #[test]
+    fn test_simple_toc_behavior() {
+        // Small doc should return None (< 2000 tokens)
+        let md = "# Introduction\n\nSome content here.\n\n## Getting Started\n\nMore content.\n\n### Installation\n\nInstall instructions.\n\n### Configuration\n\nConfig details.\n\n## Advanced Usage\n\nAdvanced stuff.";
+        let toc = generate_toc(md, md.len());
+        assert!(toc.is_none(), "Small documents should not generate ToC");
+    }
 
-        #[test]
-        fn snapshot_simple_toc() {
-            let md = "# Introduction\n\nSome content here.\n\n## Getting Started\n\nMore content.\n\n### Installation\n\nInstall instructions.\n\n### Configuration\n\nConfig details.\n\n## Advanced Usage\n\nAdvanced stuff.";
-            let toc = generate_toc(md, md.len());
-            insta::assert_snapshot!(toc.unwrap_or_default());
-        }
-
-        #[test]
-        fn snapshot_complex_headings() {
-            let md = r#"# API Reference
+    #[test]
+    fn test_complex_headings_with_code() {
+        // Verify headings with inline code are extracted correctly
+        let md = r#"# API Reference
 
 ## Methods
 
@@ -505,68 +503,38 @@ Map implementation.
 ### `Array.prototype.filter()`
 
 Filter implementation.
-
-## Classes
-
-### `Promise<T>`
-
-Promise API.
-
-#### Constructor
-
-Promise constructor.
-
-#### Methods
-
-Promise methods.
-
-## Types
-
-### `Awaited<Type>`
-
-Awaited type.
 "#;
-            let toc = generate_toc(md, md.len());
-            insta::assert_snapshot!(toc.unwrap_or_default());
-        }
+        let headings = extract_headings(md);
+        assert_eq!(headings.len(), 4);
+        assert!(headings[2].text.contains("`Array.prototype.map()`"));
+        assert!(headings[3].text.contains("`Array.prototype.filter()`"));
+    }
 
-        #[test]
-        fn snapshot_inline_formatting() {
-            let md = r#"# User Guide
+    #[test]
+    fn test_inline_formatting_stripped() {
+        // Verify bold/italic/links are stripped but text preserved
+        let md = r#"# User Guide
 
 ## Using **bold** and *italic*
 
-Content here.
-
 ## Working with [links](https://example.com)
-
-More content.
 
 ## Running `cargo build`
 
-Build instructions.
-
 ## ~~Deprecated~~ Features
-
-Old features.
 "#;
-            let toc = generate_toc(md, md.len());
-            insta::assert_snapshot!(toc.unwrap_or_default());
-        }
+        let headings = extract_headings(md);
+        assert_eq!(headings.len(), 5);
+        assert_eq!(headings[1].text, "## Using bold and italic");
+        assert_eq!(headings[2].text, "## Working with links");
+        assert!(headings[3].text.contains("`cargo build`"));
+        assert_eq!(headings[4].text, "## Deprecated Features");
+    }
 
-        #[test]
-        fn snapshot_large_document() {
-            let sections = (1..=20)
-                .map(|i| format!("## Section {}\n\nContent for section {}.\n\n", i, i))
-                .collect::<String>();
-            let md = format!("# Large Document\n\n{}", sections);
-            let toc = generate_toc(&md, md.len());
-            insta::assert_snapshot!(toc.unwrap_or_default());
-        }
-
-        #[test]
-        fn snapshot_deeply_nested() {
-            let md = r#"# Main
+    #[test]
+    fn test_deeply_nested_levels() {
+        // Verify all 6 heading levels are recognized
+        let md = r#"# Main
 
 ## Level 2
 
@@ -577,120 +545,71 @@ Old features.
 ##### Level 5
 
 ###### Level 6
-
-Content here.
-
-## Another Section
-
-### Nested
-
-#### More Nested
-
-Content.
 "#;
-            let toc = generate_toc(md, md.len());
-            insta::assert_snapshot!(toc.unwrap_or_default());
-        }
+        let headings = extract_headings(md);
+        assert_eq!(headings.len(), 6);
+        assert_eq!(headings[0].level, 1);
+        assert_eq!(headings[1].level, 2);
+        assert_eq!(headings[2].level, 3);
+        assert_eq!(headings[3].level, 4);
+        assert_eq!(headings[4].level, 5);
+        assert_eq!(headings[5].level, 6);
+    }
 
-        #[test]
-        fn snapshot_real_world_readme() {
-            let md = r#"# Project Name
-
-![Build Status](https://example.com/badge.svg)
-
-## Features
-
-- Feature 1
-- Feature 2
-
-## Installation
-
-### Prerequisites
-
-You need Node.js installed.
-
-### Quick Start
-
-Run `npm install`.
-
-## Usage
-
-### Basic Example
-
-```javascript
-const lib = require('lib');
-lib.doSomething();
-```
-
-### Advanced Configuration
-
-Edit the config file.
-
-## API Reference
-
-### `doSomething(options)`
-
-Does something cool.
-
-### `doSomethingElse()`
-
-Does something else.
-
-## Contributing
-
-See CONTRIBUTING.md.
-
-## License
-
-MIT
-"#;
-            let toc = generate_toc(md, md.len());
-            insta::assert_snapshot!(toc.unwrap_or_default());
-        }
-
-        #[test]
-        fn snapshot_unicode_content() {
-            let md = r#"# 开始使用
+    #[test]
+    fn test_unicode_headings_preserved() {
+        // Verify unicode and emoji in headings work correctly
+        let md = r#"# 开始使用
 
 ## 安装 Installation
-
-安装说明。
-
-## 配置 Configuration
-
-配置详情。
 
 ## 🎉 新功能
 
 ### ✨ Feature 1
-
-Details.
-
-### 🚀 Feature 2
-
-More details.
 "#;
-            let toc = generate_toc(md, md.len());
-            insta::assert_snapshot!(toc.unwrap_or_default());
-        }
+        let headings = extract_headings(md);
+        assert_eq!(headings.len(), 4);
+        assert!(headings[0].text.contains("开始使用"));
+        assert!(headings[1].text.contains("安装 Installation"));
+        assert!(headings[2].text.contains("🎉 新功能"));
+        assert!(headings[3].text.contains("✨ Feature 1"));
+    }
+
+    // Snapshot tests with real-world documentation
+    mod snapshots {
+        use super::*;
 
         #[test]
-        fn snapshot_real_world_svelte_llms() {
-            let md = include_str!("../test-fixtures/svelte-llms.txt");
-            let toc = generate_toc(md, md.len());
-            insta::assert_snapshot!(toc.unwrap_or_default());
-        }
-
-        #[test]
-        fn snapshot_real_world_astro_excerpt() {
+        fn snapshot_astro_excerpt() {
             let md = include_str!("../test-fixtures/astro-excerpt.txt");
             let toc = generate_toc(md, md.len());
             insta::assert_snapshot!(toc.unwrap_or_default());
         }
 
         #[test]
-        fn snapshot_real_world_convex_excerpt() {
+        fn snapshot_convex_excerpt() {
             let md = include_str!("../test-fixtures/convex-excerpt.txt");
+            let toc = generate_toc(md, md.len());
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_react_learn() {
+            let md = include_str!("../test-fixtures/react-learn.txt");
+            let toc = generate_toc(md, md.len());
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_vue_intro() {
+            let md = include_str!("../test-fixtures/vue-intro.txt");
+            let toc = generate_toc(md, md.len());
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_python_tutorial() {
+            let md = include_str!("../test-fixtures/python-tutorial.txt");
             let toc = generate_toc(md, md.len());
             insta::assert_snapshot!(toc.unwrap_or_default());
         }
