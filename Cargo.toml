@@ -12,6 +12,7 @@ categories = ["command-line-utilities", "web-programming"]
 [dependencies]
 dom_smoothie = "0.13.0"
 html2md = "0.2.15"
+pulldown-cmark = "0.13.0"
 reqwest = { version = "0.12.23", features = ["rustls-tls", "blocking"] }
 rmcp = "0.8.0"
 schemars = { version = "1.0.4", features = ["derive"] }
@@ -21,8 +22,18 @@ tokio = { version = "1.47.1", features = ["full"] }
 url = "2.5.7"
 
 [dev-dependencies]
+criterion = { version = "0.7.0", features = ["html_reports"] }
+insta = "1.43.2"
 tempfile = "3.23.0"
 walkdir = "2.5.0"
+
+[[bench]]
+name = "toc_bench"
+harness = false
+
+[lib]
+name = "llms_fetch_mcp"
+path = "src/lib.rs"
 
 # The profile that 'dist' will build with
 [profile.dist]

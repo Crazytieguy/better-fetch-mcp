@@ -1,5 +1,7 @@
 #![warn(clippy::pedantic)]
 
+mod toc;
+
 use dom_smoothie::{Config, Readability, TextMode};
 use rmcp::handler::server::ServerHandler;
 use rmcp::handler::server::tool::ToolRouter;
@@ -33,6 +35,8 @@ struct FileInfo {
     lines: usize,
     words: usize,
     characters: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    table_of_contents: Option<String>,
 }
 
 #[derive(Debug, Serialize, JsonSchema)]
@@ -258,7 +262,7 @@ impl FetchServer {
     }
 
     #[tool(
-        description = "Fetch web content and cache it locally with intelligent format detection. For best results, start with the root URL of a documentation site (e.g., https://docs.example.com) to discover llms.txt or llms-full.txt files, which provide LLM-optimized documentation structure. For GitHub, prefer raw.githubusercontent.com URLs. The tool automatically tries multiple format variations (.md, /index.md, /llms.txt, /llms-full.txt) concurrently. HTML is automatically cleaned and converted to Markdown. Returns cached file paths with content type and statistics."
+        description = "Fetch web content and cache it locally with intelligent format detection. For best results, start with the root URL of a documentation site (e.g., https://docs.example.com) to discover llms.txt or llms-full.txt files, which provide LLM-optimized documentation structure. For GitHub, prefer raw.githubusercontent.com URLs. The tool automatically tries multiple format variations (.md, /index.md, /llms.txt, /llms-full.txt) concurrently. HTML is automatically cleaned and converted to Markdown. Returns cached file paths with content type, statistics, and an intelligent table of contents (for larger documents) showing heading structure with line numbers."
     )]
     async fn fetch(
         &self,
@@ -376,6 +380,14 @@ impl FetchServer {
             })?;
 
             let (lines, words, characters) = count_stats(&content_to_save);
+
+            let table_of_contents =
+                if content_type.contains("markdown") || content_type == "html-converted" {
+                    toc::generate_toc(&content_to_save, characters)
+                } else {
+                    None
+                };
+
             file_infos.push(FileInfo {
                 path: file_path.to_string_lossy().to_string(),
                 source_url: result.url.clone(),
@@ -383,6 +395,7 @@ impl FetchServer {
                 lines,
                 words,
                 characters,
+                table_of_contents,
             });
         }
 
