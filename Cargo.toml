@@ -10,6 +10,7 @@ keywords = ["mcp", "llmstxt", "llms-txt", "markdown", "llm"]
 categories = ["command-line-utilities", "web-programming"]
 
 [dependencies]
+clap = { version = "4.5.50", features = ["derive"] }
 dom_smoothie = "0.13.0"
 html2md = "0.2.15"
 pulldown-cmark = "0.13.0"

@@ -2,6 +2,7 @@
 
 mod toc;
 
+use clap::Parser;
 use dom_smoothie::{Config, Readability, TextMode};
 use rmcp::handler::server::ServerHandler;
 use rmcp::handler::server::tool::ToolRouter;
@@ -14,6 +15,22 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::fs;
+
+#[derive(Parser)]
+#[command(author, version, about = "MCP server for fetching and caching web documentation", long_about = None)]
+struct Cli {
+    /// Cache directory path (default: .llms-fetch-mcp)
+    #[arg(value_name = "CACHE_DIR")]
+    cache_dir: Option<PathBuf>,
+
+    /// Maximum `ToC` size in bytes
+    #[arg(long, default_value_t = 4000)]
+    toc_budget: usize,
+
+    /// Minimum document size in bytes to generate `ToC`
+    #[arg(long, default_value_t = 8000)]
+    toc_threshold: usize,
+}
 
 #[derive(Clone)]
 struct FetchServer {
@@ -246,7 +263,7 @@ fn count_stats(content: &str) -> (usize, usize, usize) {
 
 #[tool_router]
 impl FetchServer {
-    fn new(cache_dir: Option<PathBuf>) -> Self {
+    fn new(cache_dir: Option<PathBuf>, toc_budget: usize, toc_threshold: usize) -> Self {
         let cache_path = cache_dir.unwrap_or_else(|| PathBuf::from(".llms-fetch-mcp"));
         // Ensure cache_dir is absolute for security (prevents relative path bypass)
         let absolute_cache = cache_path.canonicalize().unwrap_or_else(|_| {
@@ -258,7 +275,10 @@ impl FetchServer {
 
         Self {
             cache_dir: Arc::new(absolute_cache),
-            toc_config: toc::TocConfig::default(),
+            toc_config: toc::TocConfig {
+                toc_budget,
+                full_content_threshold: toc_threshold,
+            },
             tool_router: Self::tool_router(),
         }
     }
@@ -422,14 +442,9 @@ impl ServerHandler for FetchServer {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<String> = std::env::args().collect();
-    let cache_dir = if args.len() > 1 {
-        Some(PathBuf::from(&args[1]))
-    } else {
-        None
-    };
+    let cli = Cli::parse();
 
-    let server = FetchServer::new(cache_dir);
+    let server = FetchServer::new(cli.cache_dir, cli.toc_budget, cli.toc_threshold);
 
     let running = server
         .serve((tokio::io::stdin(), tokio::io::stdout()))
