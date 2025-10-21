@@ -42,7 +42,66 @@ When you fetch a URL, the server tries multiple sources in parallel:
 4. `https://example.com/index.md` - Directory Markdown
 5. `https://example.com` - Original URL (converts HTML to Markdown if needed)
 
-Content is cached locally in `.llms-fetch-mcp/` for quick access.
+Content is cached locally in `.llms-fetch-mcp/` for quick access. The server automatically generates a table of contents for cached files to help navigate large documents.
+
+## Configuration
+
+### Table of Contents Settings
+
+The server intelligently generates a table of contents, selecting heading levels to maximize detail while staying within budget:
+
+- `--toc-budget` - Maximum ToC size in bytes (default: 4000)
+- `--toc-threshold` - Minimum document size in bytes to generate ToC (default: 8000)
+
+**With npx:**
+```json
+{
+  "mcpServers": {
+    "llms-fetch": {
+      "command": "npx",
+      "args": ["-y", "llms-fetch-mcp", "--toc-budget", "2000", "--toc-threshold", "4000"]
+    }
+  }
+}
+```
+
+**With installed binary:**
+```json
+{
+  "mcpServers": {
+    "llms-fetch": {
+      "command": "llms-fetch-mcp",
+      "args": ["--toc-budget", "2000", "--toc-threshold", "4000"]
+    }
+  }
+}
+```
+
+### Custom Cache Directory
+
+**With npx:**
+```json
+{
+  "mcpServers": {
+    "llms-fetch": {
+      "command": "npx",
+      "args": ["-y", "llms-fetch-mcp", "/path/to/custom/cache"]
+    }
+  }
+}
+```
+
+**With installed binary:**
+```json
+{
+  "mcpServers": {
+    "llms-fetch": {
+      "command": "llms-fetch-mcp",
+      "args": ["/path/to/custom/cache"]
+    }
+  }
+}
+```
 
 ## Why llms.txt?
 
@@ -76,52 +135,6 @@ npm install -g llms-fetch-mcp
 ```bash
 cargo install llms-fetch-mcp
 ```
-
-Then use the binary directly instead of `npx`:
-```json
-{
-  "mcpServers": {
-    "llms-fetch": {
-      "command": "llms-fetch-mcp"
-    }
-  }
-}
-```
-
-## Configuration
-
-### Custom Cache Directory
-
-```json
-{
-  "mcpServers": {
-    "llms-fetch": {
-      "command": "llms-fetch-mcp",
-      "args": ["/path/to/custom/cache"]
-    }
-  }
-}
-```
-
-### Table of Contents Settings
-
-The server automatically generates a table of contents for cached files to help navigate large documents. You can customize this behavior:
-
-```json
-{
-  "mcpServers": {
-    "llms-fetch": {
-      "command": "llms-fetch-mcp",
-      "args": ["--toc-budget", "2000", "--toc-threshold", "4000"]
-    }
-  }
-}
-```
-
-- `--toc-budget` - Maximum ToC size in bytes (default: 4000)
-- `--toc-threshold` - Minimum document size in bytes to generate ToC (default: 8000)
-
-The server intelligently selects heading levels to maximize detail while staying within the budget.
 
 ## License
 

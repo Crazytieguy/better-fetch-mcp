@@ -66,13 +66,17 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
                 text_buffer.push(']');
             }
             Event::InlineHtml(_) if current_heading.is_some() => {
-                // Ignore HTML tags; text between tags comes as Text events
+                // Ignore HTML tags; text content comes separately as Text events
             }
             Event::End(TagEnd::Heading(_)) => {
+                debug_assert!(
+                    current_heading.is_some(),
+                    "End(Heading) without matching Start(Heading)"
+                );
                 if let Some((line_num, heading_level)) = current_heading.take() {
                     let trimmed_text = text_buffer.trim();
+                    // Empty headings are valid markdown, just skip them
                     if !trimmed_text.is_empty() {
-                        debug_assert!(!trimmed_text.is_empty());
                         let level_num = heading_level_to_u8(heading_level);
                         let heading_text =
                             format!("{} {}", "#".repeat(level_num as usize), trimmed_text);
@@ -85,6 +89,12 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
                     }
                 }
             }
+            // Ignore all other events - we only extract text content from headings.
+            // This includes:
+            // - Formatting tags (Start/End for Emphasis, Strong, Strikethrough)
+            // - Links, Images (Start/End) - text content comes as Text events
+            // - Block-level elements (Paragraph, List, CodeBlock, etc.)
+            // - Table elements, TaskListMarker, Rule, Html, etc.
             _ => {}
         }
     }
@@ -634,6 +644,70 @@ Filter implementation.
         fn snapshot_python_tutorial() {
             let md = include_str!("../test-fixtures/python-tutorial.txt");
             let toc = generate_toc(md, md.len(), &default_config());
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+    }
+
+    mod config_snapshots {
+        use super::*;
+
+        #[test]
+        fn snapshot_small_budget_react() {
+            // With a small budget (1500 bytes), should only include H1s
+            let md = include_str!("../test-fixtures/react-learn.txt");
+            let config = TocConfig {
+                toc_budget: 1500,
+                full_content_threshold: 8000,
+            };
+            let toc = generate_toc(md, md.len(), &config);
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_large_budget_react() {
+            // With a large budget (10000 bytes), should include deeper levels
+            let md = include_str!("../test-fixtures/react-learn.txt");
+            let config = TocConfig {
+                toc_budget: 10000,
+                full_content_threshold: 8000,
+            };
+            let toc = generate_toc(md, md.len(), &config);
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_low_threshold_small_doc() {
+            // With a low threshold (2000 bytes), should generate ToC for smaller docs
+            let md = include_str!("../test-fixtures/convex-excerpt.txt");
+            let config = TocConfig {
+                toc_budget: 4000,
+                full_content_threshold: 2000,
+            };
+            let toc = generate_toc(md, md.len(), &config);
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_astro_full_large_budget() {
+            // With a very large budget (50000 bytes), should generate H1-only ToC for astro-llms-full
+            let md = include_str!("../test-fixtures/astro-llms-full.txt");
+            let config = TocConfig {
+                toc_budget: 50000,
+                full_content_threshold: 8000,
+            };
+            let toc = generate_toc(md, md.len(), &config);
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_convex_full_large_budget() {
+            // With a very large budget (50000 bytes), should generate H1-only ToC for convex-llms-full
+            let md = include_str!("../test-fixtures/convex-llms-full.txt");
+            let config = TocConfig {
+                toc_budget: 50000,
+                full_content_threshold: 8000,
+            };
+            let toc = generate_toc(md, md.len(), &config);
             insta::assert_snapshot!(toc.unwrap_or_default());
         }
     }

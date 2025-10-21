@@ -433,7 +433,7 @@ impl ServerHandler for FetchServer {
             capabilities: ServerCapabilities::builder().enable_tools().build(),
             server_info: Implementation::from_build_env(),
             instructions: Some(
-                "Web content fetcher with intelligent format detection for documentation. Cleans HTML and converts to Markdown. Deduplicates content automatically."
+                "Web content fetcher with intelligent format detection for documentation. Cleans HTML and converts to Markdown. Generates table of contents for navigation. Deduplicates content automatically."
                     .to_string(),
             ),
         }
