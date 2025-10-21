@@ -24,6 +24,7 @@ pub struct Heading {
     pub text: String,
 }
 
+#[allow(clippy::too_many_lines, clippy::match_same_arms)]
 fn extract_headings(markdown: &str) -> Vec<Heading> {
     let mut headings = Vec::new();
     let mut current_heading: Option<(usize, HeadingLevel)> = None;
@@ -34,40 +35,14 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
 
     for (event, range) in parser {
         match event {
+            // Heading start: begin tracking
             Event::Start(Tag::Heading { level, .. }) => {
                 let line_num = line_tracker.line_at_offset(range.start);
                 current_heading = Some((line_num, level));
                 text_buffer.clear();
             }
-            Event::Text(text) if current_heading.is_some() => {
-                text_buffer.push_str(&text);
-            }
-            Event::Code(code) if current_heading.is_some() => {
-                text_buffer.push('`');
-                text_buffer.push_str(&code);
-                text_buffer.push('`');
-            }
-            Event::SoftBreak | Event::HardBreak if current_heading.is_some() => {
-                text_buffer.push(' ');
-            }
-            Event::InlineMath(math) if current_heading.is_some() => {
-                text_buffer.push('$');
-                text_buffer.push_str(&math);
-                text_buffer.push('$');
-            }
-            Event::DisplayMath(math) if current_heading.is_some() => {
-                text_buffer.push_str("$$");
-                text_buffer.push_str(&math);
-                text_buffer.push_str("$$");
-            }
-            Event::FootnoteReference(label) if current_heading.is_some() => {
-                text_buffer.push_str("[^");
-                text_buffer.push_str(&label);
-                text_buffer.push(']');
-            }
-            Event::InlineHtml(_) if current_heading.is_some() => {
-                // Ignore HTML tags; text content comes separately as Text events
-            }
+
+            // Heading end: save the heading
             Event::End(TagEnd::Heading(_)) => {
                 debug_assert!(
                     current_heading.is_some(),
@@ -89,13 +64,101 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
                     }
                 }
             }
-            // Ignore all other events - we only extract text content from headings.
-            // This includes:
-            // - Formatting tags (Start/End for Emphasis, Strong, Strikethrough)
-            // - Links, Images (Start/End) - text content comes as Text events
-            // - Block-level elements (Paragraph, List, CodeBlock, etc.)
-            // - Table elements, TaskListMarker, Rule, Html, etc.
-            _ => {}
+
+            // Ignore all events outside of headings
+            _ if current_heading.is_none() => {}
+
+            // === Events inside headings: extract text content ===
+            Event::Text(text) => {
+                text_buffer.push_str(&text);
+            }
+            Event::Code(code) => {
+                text_buffer.push('`');
+                text_buffer.push_str(&code);
+                text_buffer.push('`');
+            }
+            Event::InlineMath(math) => {
+                text_buffer.push('$');
+                text_buffer.push_str(&math);
+                text_buffer.push('$');
+            }
+            Event::DisplayMath(math) => {
+                text_buffer.push_str("$$");
+                text_buffer.push_str(&math);
+                text_buffer.push_str("$$");
+            }
+            Event::FootnoteReference(label) => {
+                text_buffer.push_str("[^");
+                text_buffer.push_str(&label);
+                text_buffer.push(']');
+            }
+            Event::SoftBreak | Event::HardBreak => {
+                text_buffer.push(' ');
+            }
+
+            // === HTML events: ignore tags, text comes as Text events ===
+            Event::InlineHtml(_) | Event::Html(_) => {}
+
+            // === Inline formatting tags: ignore, text comes as Text events ===
+            Event::Start(
+                Tag::Emphasis
+                | Tag::Strong
+                | Tag::Strikethrough
+                | Tag::Superscript
+                | Tag::Subscript,
+            )
+            | Event::End(
+                TagEnd::Emphasis
+                | TagEnd::Strong
+                | TagEnd::Strikethrough
+                | TagEnd::Superscript
+                | TagEnd::Subscript,
+            ) => {}
+
+            // === Link and Image tags: ignore, text comes as Text events ===
+            Event::Start(Tag::Link { .. } | Tag::Image { .. })
+            | Event::End(TagEnd::Link | TagEnd::Image) => {}
+
+            // === Block-level tags: shouldn't appear inside headings, but ignore ===
+            Event::Start(
+                Tag::Paragraph
+                | Tag::BlockQuote(_)
+                | Tag::CodeBlock(_)
+                | Tag::List(_)
+                | Tag::Item
+                | Tag::FootnoteDefinition(_),
+            )
+            | Event::End(
+                TagEnd::Paragraph
+                | TagEnd::BlockQuote(_)
+                | TagEnd::CodeBlock
+                | TagEnd::List(_)
+                | TagEnd::Item
+                | TagEnd::FootnoteDefinition,
+            ) => {}
+
+            // === Table tags: shouldn't appear inside headings, but ignore ===
+            Event::Start(Tag::Table(_) | Tag::TableHead | Tag::TableRow | Tag::TableCell)
+            | Event::End(
+                TagEnd::Table | TagEnd::TableHead | TagEnd::TableRow | TagEnd::TableCell,
+            ) => {}
+
+            // === Definition list tags: shouldn't appear inside headings, but ignore ===
+            Event::Start(
+                Tag::DefinitionList | Tag::DefinitionListTitle | Tag::DefinitionListDefinition,
+            )
+            | Event::End(
+                TagEnd::DefinitionList
+                | TagEnd::DefinitionListTitle
+                | TagEnd::DefinitionListDefinition,
+            ) => {}
+
+            // === Metadata and HTML blocks: shouldn't appear inside headings, but ignore ===
+            Event::Start(Tag::HtmlBlock) | Event::End(TagEnd::HtmlBlock) => {}
+            Event::Start(Tag::MetadataBlock(_)) | Event::End(TagEnd::MetadataBlock(_)) => {}
+
+            // === Misc events: shouldn't appear inside headings, but ignore ===
+            Event::Rule | Event::TaskListMarker(_) => {}
         }
     }
 
