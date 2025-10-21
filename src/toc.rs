@@ -1,8 +1,21 @@
 use pulldown_cmark::{Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 
-const CHARS_PER_TOKEN: f64 = 4.0;
-const TOC_BUDGET: usize = 1000;
-const FULL_CONTENT_THRESHOLD: usize = 2000;
+/// Configuration for `ToC` generation.
+/// Budget and threshold are in bytes (not tokens).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TocConfig {
+    pub toc_budget: usize,
+    pub full_content_threshold: usize,
+}
+
+impl Default for TocConfig {
+    fn default() -> Self {
+        Self {
+            toc_budget: 4000,
+            full_content_threshold: 8000,
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Heading {
@@ -37,10 +50,29 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
             Event::SoftBreak | Event::HardBreak if current_heading.is_some() => {
                 text_buffer.push(' ');
             }
+            Event::InlineMath(math) if current_heading.is_some() => {
+                text_buffer.push('$');
+                text_buffer.push_str(&math);
+                text_buffer.push('$');
+            }
+            Event::DisplayMath(math) if current_heading.is_some() => {
+                text_buffer.push_str("$$");
+                text_buffer.push_str(&math);
+                text_buffer.push_str("$$");
+            }
+            Event::FootnoteReference(label) if current_heading.is_some() => {
+                text_buffer.push_str("[^");
+                text_buffer.push_str(&label);
+                text_buffer.push(']');
+            }
+            Event::InlineHtml(_) if current_heading.is_some() => {
+                // Ignore HTML tags; text between tags comes as Text events
+            }
             Event::End(TagEnd::Heading(_)) => {
                 if let Some((line_num, heading_level)) = current_heading.take() {
                     let trimmed_text = text_buffer.trim();
                     if !trimmed_text.is_empty() {
+                        debug_assert!(!trimmed_text.is_empty());
                         let level_num = heading_level_to_u8(heading_level);
                         let heading_text =
                             format!("{} {}", "#".repeat(level_num as usize), trimmed_text);
@@ -96,34 +128,6 @@ impl LineTracker {
     }
 }
 
-#[allow(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    clippy::cast_precision_loss
-)]
-fn estimate_tokens(headings: &[Heading], max_level: u8) -> usize {
-    let filtered: Vec<_> = headings.iter().filter(|h| h.level <= max_level).collect();
-
-    if filtered.is_empty() {
-        return 0;
-    }
-
-    let max_line_num = filtered.last().unwrap().line_number;
-    let line_num_width = format!("{max_line_num}").len().max(3);
-
-    let total_chars: usize = filtered
-        .iter()
-        .map(|h| {
-            let arrow = 1;
-            let heading_len = h.text.chars().count();
-            let newline = 1;
-            line_num_width + arrow + heading_len + newline
-        })
-        .sum();
-
-    (total_chars as f64 / CHARS_PER_TOKEN).ceil() as usize
-}
-
 fn find_optimal_level(headings: &[Heading], budget: usize) -> Option<u8> {
     if headings.is_empty() {
         return None;
@@ -133,11 +137,16 @@ fn find_optimal_level(headings: &[Heading], budget: usize) -> Option<u8> {
 
     let mut best = None;
     for level in 1..=max_level {
-        let tokens = estimate_tokens(headings, level);
-        if tokens <= budget {
+        let rendered = render_toc(headings, level);
+        if rendered.is_empty() {
+            continue; // Skip levels with no headings
+        }
+
+        let byte_size = rendered.len();
+        if byte_size <= budget {
             best = Some(level);
         } else {
-            break;
+            break; // Stop when budget exceeded
         }
     }
 
@@ -151,6 +160,7 @@ fn render_toc(headings: &[Heading], max_level: u8) -> String {
         return String::new();
     }
 
+    debug_assert!(!filtered.is_empty());
     let max_line_num = filtered.last().unwrap().line_number;
     let width = format!("{max_line_num}").len().max(3);
 
@@ -161,14 +171,8 @@ fn render_toc(headings: &[Heading], max_level: u8) -> String {
         .join("\n")
 }
 
-#[allow(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    clippy::cast_precision_loss
-)]
-pub fn generate_toc(markdown: &str, total_chars: usize) -> Option<String> {
-    let estimated_tokens = (total_chars as f64 / CHARS_PER_TOKEN).ceil() as usize;
-    if estimated_tokens < FULL_CONTENT_THRESHOLD {
+pub fn generate_toc(markdown: &str, total_chars: usize, config: &TocConfig) -> Option<String> {
+    if total_chars < config.full_content_threshold {
         return None;
     }
 
@@ -177,7 +181,7 @@ pub fn generate_toc(markdown: &str, total_chars: usize) -> Option<String> {
         return None;
     }
 
-    let optimal_level = find_optimal_level(&headings, TOC_BUDGET)?;
+    let optimal_level = find_optimal_level(&headings, config.toc_budget)?;
 
     let toc = render_toc(&headings, optimal_level);
     if toc.is_empty() { None } else { Some(toc) }
@@ -186,6 +190,10 @@ pub fn generate_toc(markdown: &str, total_chars: usize) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn default_config() -> TocConfig {
+        TocConfig::default()
+    }
 
     #[test]
     fn test_extract_simple_headings() {
@@ -271,7 +279,7 @@ mod tests {
             },
         ];
 
-        let level = find_optimal_level(&headings, 100);
+        let level = find_optimal_level(&headings, 400);
         assert!(level.is_some());
         assert!(level.unwrap() >= 1);
     }
@@ -330,14 +338,14 @@ mod tests {
     #[test]
     fn test_generate_toc_skips_small_docs() {
         let small_md = "# Title\nSome content.";
-        let toc = generate_toc(small_md, small_md.len());
+        let toc = generate_toc(small_md, small_md.len(), &default_config());
         assert!(toc.is_none());
     }
 
     #[test]
     fn test_generate_toc_returns_some_for_large_docs() {
         let large_md = format!("# Title\n{}\n## Section", "content\n".repeat(1000));
-        let toc = generate_toc(&large_md, large_md.len());
+        let toc = generate_toc(&large_md, large_md.len(), &default_config());
         assert!(toc.is_some());
     }
 
@@ -377,36 +385,8 @@ mod tests {
             "x".repeat(10000),
             "more\n".repeat(1000)
         );
-        let toc = generate_toc(&md, md.len());
+        let toc = generate_toc(&md, md.len(), &default_config());
         assert!(toc.is_none());
-    }
-
-    #[test]
-    fn test_width_calculation_consistency() {
-        let headings = vec![
-            Heading {
-                level: 1,
-                line_number: 1,
-                text: "# Title".to_string(),
-            },
-            Heading {
-                level: 1,
-                line_number: 100000,
-                text: "# Large Line Number".to_string(),
-            },
-        ];
-
-        let tokens = estimate_tokens(&headings, 1);
-        let rendered = render_toc(&headings, 1);
-        let actual_chars = rendered.chars().count();
-        let estimated_chars = (tokens as f64 * CHARS_PER_TOKEN) as usize;
-
-        assert!(
-            (actual_chars as i32 - estimated_chars as i32).abs() < 50,
-            "Estimate should be close to actual: estimated {} chars, actual {} chars",
-            estimated_chars,
-            actual_chars
-        );
     }
 
     #[test]
@@ -482,10 +462,53 @@ mod tests {
     }
 
     #[test]
+    fn test_heading_with_inline_math() {
+        let md = "# Equation with $E=mc^2$ inline";
+        let headings = extract_headings(md);
+        assert_eq!(headings.len(), 1);
+        assert_eq!(headings[0].text, "# Equation with $E=mc^2$ inline");
+    }
+
+    #[test]
+    fn test_heading_with_display_math() {
+        let md = "# Formula $$\\sum_{i=1}^n i$$ display";
+        let headings = extract_headings(md);
+        assert_eq!(headings.len(), 1);
+        assert_eq!(headings[0].text, "# Formula $$\\sum_{i=1}^n i$$ display");
+    }
+
+    #[test]
+    fn test_heading_with_footnote_reference() {
+        let md = "# Heading with footnote[^1]";
+        let headings = extract_headings(md);
+        assert_eq!(headings.len(), 1);
+        assert_eq!(headings[0].text, "# Heading with footnote[^1]");
+    }
+
+    #[test]
+    fn test_heading_with_inline_html_drops_tags() {
+        let md = "# Heading with <span>HTML</span> tags";
+        let headings = extract_headings(md);
+        assert_eq!(headings.len(), 1);
+        assert_eq!(headings[0].text, "# Heading with HTML tags");
+    }
+
+    #[test]
+    fn test_heading_with_mixed_inline_elements_complete() {
+        let md = "# Mix of `code` and $math$ and [^1] and **bold**";
+        let headings = extract_headings(md);
+        assert_eq!(headings.len(), 1);
+        assert_eq!(
+            headings[0].text,
+            "# Mix of `code` and $math$ and [^1] and bold"
+        );
+    }
+
+    #[test]
     fn test_simple_toc_behavior() {
         // Small doc should return None (< 2000 tokens)
         let md = "# Introduction\n\nSome content here.\n\n## Getting Started\n\nMore content.\n\n### Installation\n\nInstall instructions.\n\n### Configuration\n\nConfig details.\n\n## Advanced Usage\n\nAdvanced stuff.";
-        let toc = generate_toc(md, md.len());
+        let toc = generate_toc(md, md.len(), &default_config());
         assert!(toc.is_none(), "Small documents should not generate ToC");
     }
 
@@ -582,35 +605,35 @@ Filter implementation.
         #[test]
         fn snapshot_astro_excerpt() {
             let md = include_str!("../test-fixtures/astro-excerpt.txt");
-            let toc = generate_toc(md, md.len());
+            let toc = generate_toc(md, md.len(), &default_config());
             insta::assert_snapshot!(toc.unwrap_or_default());
         }
 
         #[test]
         fn snapshot_convex_excerpt() {
             let md = include_str!("../test-fixtures/convex-excerpt.txt");
-            let toc = generate_toc(md, md.len());
+            let toc = generate_toc(md, md.len(), &default_config());
             insta::assert_snapshot!(toc.unwrap_or_default());
         }
 
         #[test]
         fn snapshot_react_learn() {
             let md = include_str!("../test-fixtures/react-learn.txt");
-            let toc = generate_toc(md, md.len());
+            let toc = generate_toc(md, md.len(), &default_config());
             insta::assert_snapshot!(toc.unwrap_or_default());
         }
 
         #[test]
         fn snapshot_vue_intro() {
             let md = include_str!("../test-fixtures/vue-intro.txt");
-            let toc = generate_toc(md, md.len());
+            let toc = generate_toc(md, md.len(), &default_config());
             insta::assert_snapshot!(toc.unwrap_or_default());
         }
 
         #[test]
         fn snapshot_python_tutorial() {
             let md = include_str!("../test-fixtures/python-tutorial.txt");
-            let toc = generate_toc(md, md.len());
+            let toc = generate_toc(md, md.len(), &default_config());
             insta::assert_snapshot!(toc.unwrap_or_default());
         }
     }
@@ -624,7 +647,7 @@ Filter implementation.
             // Full Astro docs: 2.4MB, 424+ H1 headings
             // Even H1-only would exceed 1000 token budget
             let md = include_str!("../test-fixtures/astro-llms-full.txt");
-            let toc = generate_toc(md, md.len());
+            let toc = generate_toc(md, md.len(), &default_config());
             assert!(
                 toc.is_none(),
                 "Should not generate ToC when even H1s exceed budget"
@@ -635,11 +658,98 @@ Filter implementation.
         fn test_convex_llms_full_exceeds_budget() {
             // Full Convex docs: 1.8MB, 296+ H1 headings
             let md = include_str!("../test-fixtures/convex-llms-full.txt");
-            let toc = generate_toc(md, md.len());
+            let toc = generate_toc(md, md.len(), &default_config());
             assert!(
                 toc.is_none(),
                 "Should not generate ToC when even H1s exceed budget"
             );
+        }
+    }
+
+    mod config_tests {
+        use super::*;
+
+        #[test]
+        fn test_custom_budget_allows_more_headings() {
+            let md = include_str!("../test-fixtures/python-tutorial.txt");
+
+            let small_budget = TocConfig {
+                toc_budget: 100,
+                full_content_threshold: 2000,
+            };
+            let large_budget = TocConfig {
+                toc_budget: 10000,
+                full_content_threshold: 2000,
+            };
+
+            let toc_small = generate_toc(md, md.len(), &small_budget);
+            let toc_large = generate_toc(md, md.len(), &large_budget);
+
+            assert!(toc_small.is_some());
+            assert!(toc_large.is_some());
+
+            let small_len = toc_small.unwrap().len();
+            let large_len = toc_large.unwrap().len();
+            assert!(
+                large_len >= small_len,
+                "Larger budget should allow same or more headings"
+            );
+        }
+
+        #[test]
+        fn test_higher_threshold_skips_more_docs() {
+            let md = include_str!("../test-fixtures/vue-intro.txt");
+
+            let low_threshold = TocConfig {
+                toc_budget: 1000,
+                full_content_threshold: 1000,
+            };
+            let high_threshold = TocConfig {
+                toc_budget: 1000,
+                full_content_threshold: 100000,
+            };
+
+            let toc_low = generate_toc(md, md.len(), &low_threshold);
+            let toc_high = generate_toc(md, md.len(), &high_threshold);
+
+            assert!(toc_low.is_some(), "Low threshold should generate ToC");
+            assert!(toc_high.is_none(), "High threshold should skip ToC");
+        }
+
+        #[test]
+        fn test_zero_threshold_always_generates() {
+            let small_md = "# Title\nContent.";
+
+            let config = TocConfig {
+                toc_budget: 1000,
+                full_content_threshold: 0,
+            };
+
+            let toc = generate_toc(small_md, small_md.len(), &config);
+            assert!(toc.is_some(), "Zero threshold should always generate ToC");
+        }
+
+        #[test]
+        fn test_tiny_budget_returns_none() {
+            let md = include_str!("../test-fixtures/react-learn.txt");
+
+            let tiny_budget = TocConfig {
+                toc_budget: 10,
+                full_content_threshold: 2000,
+            };
+
+            let toc = generate_toc(md, md.len(), &tiny_budget);
+            assert!(
+                toc.is_none(),
+                "Budget too small for even H1s should return None"
+            );
+        }
+
+        #[test]
+        fn test_config_default_values() {
+            let config = TocConfig::default();
+            assert_eq!(config.toc_budget, 4000);
+            assert_eq!(config.full_content_threshold, 8000);
         }
     }
 }

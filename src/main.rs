@@ -18,6 +18,7 @@ use tokio::fs;
 #[derive(Clone)]
 struct FetchServer {
     cache_dir: Arc<PathBuf>,
+    toc_config: toc::TocConfig,
     #[allow(dead_code)]
     tool_router: ToolRouter<Self>,
 }
@@ -257,12 +258,13 @@ impl FetchServer {
 
         Self {
             cache_dir: Arc::new(absolute_cache),
+            toc_config: toc::TocConfig::default(),
             tool_router: Self::tool_router(),
         }
     }
 
     #[tool(
-        description = "Fetch web content and cache it locally with intelligent format detection. For best results, start with the root URL of a documentation site (e.g., https://docs.example.com) to discover llms.txt or llms-full.txt files, which provide LLM-optimized documentation structure. For GitHub, prefer raw.githubusercontent.com URLs. The tool automatically tries multiple format variations (.md, /index.md, /llms.txt, /llms-full.txt) concurrently. HTML is automatically cleaned and converted to Markdown. Returns cached file paths with content type, statistics, and an intelligent table of contents (for larger documents) showing heading structure with line numbers."
+        description = "Use to access documentation and guides from the web. Start with documentation root URLs (e.g., https://docs.example.com) - the tool discovers llms.txt files and tries multiple formats (.md, /index.md, /llms.txt, /llms-full.txt). Content is converted to markdown and cached locally. Returns file path with table of contents for navigation. For GitHub files, use raw.githubusercontent.com URLs for best results."
     )]
     async fn fetch(
         &self,
@@ -383,7 +385,7 @@ impl FetchServer {
 
             let table_of_contents =
                 if content_type.contains("markdown") || content_type == "html-converted" {
-                    toc::generate_toc(&content_to_save, characters)
+                    toc::generate_toc(&content_to_save, characters, &self.toc_config)
                 } else {
                     None
                 };
