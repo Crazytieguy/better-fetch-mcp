@@ -88,7 +88,9 @@ Then use the binary directly instead of `npx`:
 }
 ```
 
-## Custom Cache Directory
+## Configuration
+
+### Custom Cache Directory
 
 ```json
 {
@@ -100,6 +102,26 @@ Then use the binary directly instead of `npx`:
   }
 }
 ```
+
+### Table of Contents Settings
+
+The server automatically generates a table of contents for cached files to help navigate large documents. You can customize this behavior:
+
+```json
+{
+  "mcpServers": {
+    "llms-fetch": {
+      "command": "llms-fetch-mcp",
+      "args": ["--toc-budget", "2000", "--toc-threshold", "4000"]
+    }
+  }
+}
+```
+
+- `--toc-budget` - Maximum ToC size in bytes (default: 4000)
+- `--toc-threshold` - Minimum document size in bytes to generate ToC (default: 8000)
+
+The server intelligently selects heading levels to maximize detail while staying within the budget.
 
 ## License
 
