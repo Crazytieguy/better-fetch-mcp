@@ -199,7 +199,7 @@ expression: toc.unwrap_or_default()
 57097→# Action unexpected called from the server.
 57111→# Action not found.
 57121→# An invalid Action query string was passed by a form.
-57139→# Can’t load the Astro actions.
+57139→# Can't load the Astro actions.
 57149→# Action handler returned invalid data.
 57163→# An invalid Action query string was passed by a form.
 57181→# Actions must be used with server output.
@@ -211,7 +211,7 @@ expression: toc.unwrap_or_default()
 57259→# Cannot extract the font type from the given URL.
 57269→# Cannot fetch the given font file.
 57279→# Cannot load font provider
-57289→# Astro can’t render the route.
+57289→# Astro can't render the route.
 57299→# Cannot use the astro:config module without enabling the experimental feature.
 57313→# Astro.clientAddress is not available in current adapter.
 57328→# Collection does not exist
@@ -223,7 +223,7 @@ expression: toc.unwrap_or_default()
 57409→# Content loader returned an entry with an invalid id.
 57424→# Content Schema should not contain slug.
 57438→# Could not transform image.
-57454→# CSP feature isn’t enabled
+57454→# CSP feature isn't enabled
 57464→# CSS Syntax Error.
 57476→# Data collection entry failed to parse.
 57486→# Duplicate content entry slug.
@@ -236,7 +236,7 @@ expression: toc.unwrap_or_default()
 57611→# Expected image options, not an ESM-imported image.
 57632→# Experimental fonts are not enabled
 57642→# Failed to retrieve remote image dimensions
-57652→# Astro couldn’t find the correct page to render
+57652→# Astro couldn't find the correct page to render
 57662→# Could not import file.
 57678→# Glob patterns are not supported in the file loader
 57692→# File parser not found
@@ -248,12 +248,12 @@ expression: toc.unwrap_or_default()
 57783→# Invalid value for getStaticPaths route parameter.
 57828→# getStaticPaths RSS helper is not available anymore.
 57846→# getStaticPaths() function required for dynamic routes.
-57862→# The path doesn’t contain any locale
+57862→# The path doesn't contain any locale
 57872→# i18n Not Enabled
-57899→# Image missing required “alt” property.
+57899→# Image missing required "alt" property.
 57917→# Image not found.
 57933→# Cannot set both densities and widths
-57947→# You can’t use the current function with the current strategy
+57947→# You can't use the current function with the current strategy
 57961→# Invalid component arguments.
 57972→# Content entry data does not match schema.
 57985→# Content entry frontmatter does not match schema.
@@ -261,12 +261,12 @@ expression: toc.unwrap_or_default()
 58012→# Invalid dynamic route.
 58026→# Invalid frontmatter injection.
 58040→# Invalid value returned by a getStaticPaths path.
-58068→# Invalid entry inside getStaticPath’s return value
+58068→# Invalid entry inside getStaticPath's return value
 58093→# Invalid value returned by getStaticPaths.
 58119→# Invalid glob pattern.
 58133→# Error while loading image service.
 58149→# Invalid prerender export.
-58160→# You attempted to rewrite a 404 inside a static page, and this isn’t allowed.
+58160→# You attempted to rewrite a 404 inside a static page, and this isn't allowed.
 58174→# Error in live content config.
 58189→# Local images must be imported.
 58228→# Value assigned to locals is not accepted.
@@ -276,8 +276,8 @@ expression: toc.unwrap_or_default()
 58303→# Failed to parse Markdown frontmatter.
 58316→# Image not found.
 58336→# MDX integration missing.
-58350→# Can’t load the middleware.
-58370→# The middleware didn’t return a Response.
+58350→# Can't load the middleware.
+58370→# The middleware didn't return a Response.
 58390→# The middleware returned something that is not a Response object.
 58409→# Missing image dimensions
 58426→# Index page not found.
@@ -294,7 +294,7 @@ expression: toc.unwrap_or_default()
 58594→# No import found for component.
 58604→# No matching renderer found.
 58621→# No static path found for requested path.
-58635→# Prerendered routes aren’t supported when internationalization domains are enabled.
+58635→# Prerendered routes aren't supported when internationalization domains are enabled.
 58645→# Invalid type returned by Astro page.
 58674→# Page number param not found.
 58688→# Astro.clientAddress cannot be used inside prerendered routes.
@@ -304,7 +304,7 @@ expression: toc.unwrap_or_default()
 58747→# Attempted to render an undefined content collection entry.
 58755→# Invalid slot name.
 58769→# Unable to set response.
-58783→# Astro couldn’t find the route to rewrite, or if was found but it emitted an error during the rendering phase.
+58783→# Astro couldn't find the route to rewrite, or if was found but it emitted an error during the rendering phase.
 58797→# Cannot use Astro.rewrite after the request body has been read
 58819→# Route not found.
 58829→# Module is only available server-side
@@ -312,7 +312,7 @@ expression: toc.unwrap_or_default()
 58857→# Session flag not set
 58875→# Session storage could not be initialized.
 58889→# Session data could not be saved.
-58903→# Sessions cannot be used with an adapter that doesn’t support server output.
+58903→# Sessions cannot be used with an adapter that doesn't support server output.
 58921→# Astro.clientAddress is not available in prerendered pages.
 58938→# Astro.redirect is not available in static mode.
 58959→# Unhandled rejection
