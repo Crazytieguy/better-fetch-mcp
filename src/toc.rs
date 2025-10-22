@@ -275,6 +275,8 @@ fn find_optimal_level(headings: &[Heading], budget: usize) -> Option<(u8, String
 }
 
 fn render_toc(headings: &[Heading], max_level: u8) -> String {
+    use std::fmt::Write;
+
     let filtered: Vec<_> = headings.iter().filter(|h| h.level <= max_level).collect();
 
     if filtered.is_empty() {
@@ -283,13 +285,39 @@ fn render_toc(headings: &[Heading], max_level: u8) -> String {
 
     debug_assert!(!filtered.is_empty());
     let max_line_num = filtered.last().unwrap().line_number;
-    let width = format!("{max_line_num}").len().max(3);
 
-    filtered
-        .iter()
-        .map(|h| format!("{:>width$}→{}", h.line_number, h.text, width = width))
-        .collect::<Vec<_>>()
-        .join("\n")
+    // Calculate width without allocating string
+    #[allow(
+        clippy::cast_precision_loss,
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss
+    )]
+    let width = if max_line_num < 100 {
+        3
+    } else if max_line_num < 1000 {
+        4
+    } else if max_line_num < 10000 {
+        5
+    } else {
+        // For very large line numbers (>10k), use log10 to calculate digits
+        // Casts are safe: max_line_num is positive, result is always >= 0
+        ((max_line_num as f64).log10().floor() as usize + 1).max(3)
+    };
+
+    // Pre-allocate with estimated capacity to reduce reallocations
+    // Rough estimate: width + "→" (3 bytes) + average heading length (30) + newline per heading
+    let estimated_size = filtered.len() * (width + 34);
+    let mut result = String::with_capacity(estimated_size);
+
+    for (i, h) in filtered.iter().enumerate() {
+        if i > 0 {
+            result.push('\n');
+        }
+        // Use write! to avoid intermediate allocations
+        write!(result, "{:>width$}→{}", h.line_number, h.text).unwrap();
+    }
+
+    result
 }
 
 /// Generates a table of contents for markdown content.
@@ -454,6 +482,44 @@ mod tests {
         assert_eq!(headings[1].line_number, 2);
         assert_eq!(headings[2].line_number, 3);
         assert_eq!(headings[3].line_number, 4);
+    }
+
+    #[test]
+    fn test_headings_with_inline_formatting() {
+        // Headings with bold, italic, code, and links preserved exactly
+        let md = r#"## **Bold** heading
+### Heading with `code`
+#### Heading with *italic* text
+##### Mix **bold** and `code` and [link](url)"#;
+        let headings = extract_headings(md);
+        assert_eq!(headings.len(), 4);
+        assert_eq!(headings[0].text, "## **Bold** heading");
+        assert_eq!(headings[1].text, "### Heading with `code`");
+        assert_eq!(headings[2].text, "#### Heading with *italic* text");
+        assert_eq!(
+            headings[3].text,
+            "##### Mix **bold** and `code` and [link](url)"
+        );
+    }
+
+    #[test]
+    fn test_empty_document() {
+        let md = "";
+        let headings = extract_headings(md);
+        assert_eq!(headings.len(), 0);
+
+        let toc = generate_toc(md, md.len(), &TocConfig::default());
+        assert!(toc.is_none());
+    }
+
+    #[test]
+    fn test_document_with_no_headings() {
+        let md = "Just some paragraph text.\n\nAnd another paragraph.";
+        let headings = extract_headings(md);
+        assert_eq!(headings.len(), 0);
+
+        let toc = generate_toc(md, md.len(), &TocConfig::default());
+        assert!(toc.is_none());
     }
 
     #[test]
