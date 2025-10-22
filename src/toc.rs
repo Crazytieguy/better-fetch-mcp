@@ -73,7 +73,10 @@ pub struct Heading {
 }
 
 /// Check if text is empty or contains only whitespace/invisible characters.
-/// Regular `trim()` doesn't remove zero-width spaces (U+200B), so we check char-by-char.
+///
+/// Regular `trim()` doesn't remove zero-width spaces (U+200B), which are commonly
+/// inserted by documentation generators in empty anchor links like `[​](#anchor)`.
+/// We check for specific invisible Unicode characters that appear in real-world docs.
 fn is_empty_or_invisible(text: &str) -> bool {
     text.chars().all(|c| {
         c.is_whitespace()
@@ -94,6 +97,7 @@ fn is_empty_or_invisible(text: &str) -> bool {
 /// - Track when we enter/exit a link within a heading
 /// - Record which links are empty (no Text/Code events inside them)
 /// - Extract full heading text, excluding byte ranges of empty links
+#[allow(clippy::too_many_lines)] // Complex but cohesive state machine
 fn extract_headings(markdown: &str) -> Vec<Heading> {
     use std::ops::Range;
 
@@ -113,19 +117,22 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
     let mut headings = Vec::new();
     let mut current_heading: Option<HeadingState> = None;
 
-    // Track line number incrementally to avoid O(n*h) rescanning
+    // Track line number incrementally to avoid O(n*h) rescanning where:
+    // n = document size in bytes, h = number of headings
+    // Without incremental tracking, we'd rescan from doc start for each heading
     let mut current_line = 1;
     let mut last_pos = 0;
 
     for (event, range) in Parser::new_ext(markdown, Options::all()).into_offset_iter() {
-        // Update line number based on newlines since last position (only move forward)
+        // Update line number based on newlines since last position
+        // Handle overlapping/backward ranges by only advancing forward
         if range.start > last_pos {
             current_line += markdown[last_pos..range.start]
                 .chars()
                 .filter(|&c| c == '\n')
                 .count();
-            last_pos = range.start;
         }
+        last_pos = last_pos.max(range.start);
 
         match event {
             Event::Start(Tag::Heading { level, .. }) => {
@@ -164,11 +171,16 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
                 }
             }
             Event::End(TagEnd::Heading(_)) => {
-                if let Some(heading) = current_heading.take() {
+                if let Some(mut heading) = current_heading.take() {
+                    // Clear any unclosed link (defensive against malformed markdown)
+                    heading.current_link = None;
+
                     // Extract full heading text
                     let full_text = markdown.get(heading.start..range.end).unwrap_or("");
 
                     // Build text excluding empty link ranges
+                    // Parser gives absolute byte offsets in the full markdown document.
+                    // We need to convert these to relative offsets within full_text (this heading).
                     let mut text = String::new();
                     let mut last_end = 0;
 
@@ -177,17 +189,26 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
                         let relative_start = empty_range.start.saturating_sub(heading.start);
                         let relative_end = empty_range.end.saturating_sub(heading.start);
 
-                        // Add text before this empty link
-                        if last_end < relative_start && relative_start <= full_text.len() {
-                            text.push_str(&full_text[last_end..relative_start]);
+                        // Validate range to prevent invalid slicing
+                        if relative_start >= relative_end || relative_end > full_text.len() {
+                            continue;
+                        }
+
+                        // Add text before this empty link (safe UTF-8 slicing)
+                        if last_end < relative_start
+                            && let Some(slice) = full_text.get(last_end..relative_start)
+                        {
+                            text.push_str(slice);
                         }
                         // Skip the empty link itself, update position
                         last_end = relative_end;
                     }
 
-                    // Add remaining text after last empty link
-                    if last_end < full_text.len() {
-                        text.push_str(&full_text[last_end..]);
+                    // Add remaining text after last empty link (safe UTF-8 slicing)
+                    if last_end < full_text.len()
+                        && let Some(slice) = full_text.get(last_end..)
+                    {
+                        text.push_str(slice);
                     }
 
                     let text = text.trim();
@@ -238,9 +259,9 @@ fn find_optimal_level(headings: &[Heading], budget: usize) -> Option<(u8, String
         let byte_size = rendered.len();
         if byte_size <= budget {
             best = Some((level, rendered));
-        } else {
-            break; // Stop when budget exceeded
         }
+        // Note: Don't break early - ToC size may not increase monotonically
+        // (e.g., many H2s but few H3s could make level 3 smaller than level 2)
     }
 
     best
