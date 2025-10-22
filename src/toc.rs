@@ -218,9 +218,14 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
                         text.push_str(slice);
                     }
 
+                    // Collapse multiple consecutive spaces left behind by empty link removal
                     let text = text.trim();
+                    let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
 
-                    if !text.is_empty() {
+                    // Filter out headings that are only hashes/whitespace after empty link removal
+                    let has_content = text.chars().any(|c| !c.is_whitespace() && c != '#');
+
+                    if !text.is_empty() && has_content {
                         let level_num = match heading.level {
                             HeadingLevel::H1 => 1,
                             HeadingLevel::H2 => 2,
@@ -447,6 +452,23 @@ mod tests {
         let headings5 = extract_headings(md5);
         assert_eq!(headings5.len(), 1);
         assert_eq!(headings5[0].text, "## Check [docs](url) for details");
+
+        // Whitespace collapsing: empty link removal should not leave double spaces
+        let md6 = "## [¶](#anchor) Title with text";
+        let headings6 = extract_headings(md6);
+        assert_eq!(headings6.len(), 1);
+        assert_eq!(headings6[0].text, "## Title with text");
+        assert!(!headings6[0].text.contains("  ")); // No double spaces
+
+        // Heading with only empty links should be filtered out
+        let md7 = "## [](#anchor) [¶](#another)";
+        let headings7 = extract_headings(md7);
+        assert_eq!(headings7.len(), 0); // Filtered out entirely
+
+        // Heading with only hashes and empty link should be filtered
+        let md8 = "### [​](#anchor)";
+        let headings8 = extract_headings(md8);
+        assert_eq!(headings8.len(), 0);
     }
 
     #[test]
