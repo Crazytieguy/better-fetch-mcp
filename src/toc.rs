@@ -38,77 +38,58 @@ pub struct Heading {
 /// Uses pulldown-cmark events and their byte offsets to extract heading text,
 /// automatically excluding trailing links (which are typically anchor links).
 ///
-/// Algorithm:
-/// 1. Collect all parser events into a vector
-/// 2. For each Start(Heading) event, scan ahead to find first Start(Link) or End(Heading)
-/// 3. Extract text from heading start to link start (or heading end if no link)
-/// 4. Map byte offset to line number for display
-///
-/// This approach lets pulldown-cmark handle all markdown parsing - we just use
-/// the byte ranges to extract clean heading text.
+/// Streams through events with a state machine:
+/// - Track when we enter/exit a heading
+/// - Record the byte offset of the first link within each heading
+/// - Extract text from heading start to link start (or heading end if no link)
 fn extract_headings(markdown: &str) -> Vec<Heading> {
-    // Collect all events with ranges
-    let events: Vec<_> = Parser::new_ext(markdown, Options::all())
-        .into_offset_iter()
-        .collect();
-
     let mut headings = Vec::new();
-    let mut i = 0;
+    // Track current heading: (level, start_byte, first_link_byte)
+    let mut current_heading: Option<(HeadingLevel, usize, Option<usize>)> = None;
 
-    while i < events.len() {
-        if let (Event::Start(Tag::Heading { level, .. }), heading_range) = &events[i] {
-            // Find the end of heading content (before any trailing link)
-            let mut content_end = heading_range.end;
-            let mut j = i + 1;
-
-            // Scan ahead to find first link or end of heading
-            while j < events.len() {
-                match &events[j].0 {
-                    Event::Start(Tag::Link { .. }) => {
-                        // Stop before the link - this excludes trailing anchors
-                        content_end = events[j].1.start;
-                        break;
-                    }
-                    Event::End(TagEnd::Heading(_)) => {
-                        // No link found, use full heading range
-                        break;
-                    }
-                    _ => {}
+    for (event, range) in Parser::new_ext(markdown, Options::all()).into_offset_iter() {
+        match event {
+            Event::Start(Tag::Heading { level, .. }) => {
+                current_heading = Some((level, range.start, None));
+            }
+            Event::Start(Tag::Link { .. }) => {
+                // Record first link position if we're inside a heading
+                if let Some((_, _, link_pos)) = &mut current_heading
+                    && link_pos.is_none()
+                {
+                    *link_pos = Some(range.start);
                 }
-                j += 1;
             }
+            Event::End(TagEnd::Heading(_)) => {
+                if let Some((level, start, link_at)) = current_heading.take() {
+                    // Extract text: heading start to link start (or heading end if no link)
+                    let content_end = link_at.unwrap_or(range.end);
+                    let text = markdown.get(start..content_end).unwrap_or("").trim();
 
-            // Extract text from heading start to content end
-            let text = markdown
-                .get(heading_range.start..content_end)
-                .unwrap_or("")
-                .trim();
+                    if !text.is_empty() {
+                        // Calculate line number by counting newlines before heading
+                        let line_number =
+                            markdown[..start].chars().filter(|&c| c == '\n').count() + 1;
 
-            if !text.is_empty() {
-                // Find line number for display
-                let line_number = markdown[..heading_range.start]
-                    .chars()
-                    .filter(|&c| c == '\n')
-                    .count()
-                    + 1;
+                        let level_num = match level {
+                            HeadingLevel::H1 => 1,
+                            HeadingLevel::H2 => 2,
+                            HeadingLevel::H3 => 3,
+                            HeadingLevel::H4 => 4,
+                            HeadingLevel::H5 => 5,
+                            HeadingLevel::H6 => 6,
+                        };
 
-                let level_num = match level {
-                    HeadingLevel::H1 => 1,
-                    HeadingLevel::H2 => 2,
-                    HeadingLevel::H3 => 3,
-                    HeadingLevel::H4 => 4,
-                    HeadingLevel::H5 => 5,
-                    HeadingLevel::H6 => 6,
-                };
-
-                headings.push(Heading {
-                    level: level_num,
-                    line_number,
-                    text: text.to_string(),
-                });
+                        headings.push(Heading {
+                            level: level_num,
+                            line_number,
+                            text: text.to_string(),
+                        });
+                    }
+                }
             }
+            _ => {}
         }
-        i += 1;
     }
 
     headings
