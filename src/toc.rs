@@ -44,33 +44,42 @@ pub struct Heading {
 /// - Extract text from heading start to link start (or heading end if no link)
 fn extract_headings(markdown: &str) -> Vec<Heading> {
     let mut headings = Vec::new();
-    // Track current heading: (level, start_byte, first_link_byte)
-    let mut current_heading: Option<(HeadingLevel, usize, Option<usize>)> = None;
+    // Track current heading: (level, start_byte, first_link_byte, line_number)
+    let mut current_heading: Option<(HeadingLevel, usize, Option<usize>, usize)> = None;
+
+    // Track line number incrementally to avoid O(n*h) rescanning
+    let mut current_line = 1;
+    let mut last_pos = 0;
 
     for (event, range) in Parser::new_ext(markdown, Options::all()).into_offset_iter() {
+        // Update line number based on newlines since last position (only move forward)
+        if range.start > last_pos {
+            current_line += markdown[last_pos..range.start]
+                .chars()
+                .filter(|&c| c == '\n')
+                .count();
+            last_pos = range.start;
+        }
+
         match event {
             Event::Start(Tag::Heading { level, .. }) => {
-                current_heading = Some((level, range.start, None));
+                current_heading = Some((level, range.start, None, current_line));
             }
             Event::Start(Tag::Link { .. }) => {
                 // Record first link position if we're inside a heading
-                if let Some((_, _, link_pos)) = &mut current_heading
+                if let Some((_, _, link_pos, _)) = &mut current_heading
                     && link_pos.is_none()
                 {
                     *link_pos = Some(range.start);
                 }
             }
             Event::End(TagEnd::Heading(_)) => {
-                if let Some((level, start, link_at)) = current_heading.take() {
+                if let Some((level, start, link_at, line_number)) = current_heading.take() {
                     // Extract text: heading start to link start (or heading end if no link)
                     let content_end = link_at.unwrap_or(range.end);
                     let text = markdown.get(start..content_end).unwrap_or("").trim();
 
                     if !text.is_empty() {
-                        // Calculate line number by counting newlines before heading
-                        let line_number =
-                            markdown[..start].chars().filter(|&c| c == '\n').count() + 1;
-
                         let level_num = match level {
                             HeadingLevel::H1 => 1,
                             HeadingLevel::H2 => 2,
