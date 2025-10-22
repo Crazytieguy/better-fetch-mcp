@@ -1,19 +1,43 @@
-// Table of Contents generation for markdown documents.
-//
-// This module extracts headings from markdown and generates compact table of contents
-// summaries for navigation. Headings are preserved exactly as they appear in the source,
-// including all markdown syntax (links, formatting, trailing hashes, etc).
-//
-// Design philosophy: Preserve exact source content rather than reconstructing cleaned text.
-// This maintains fidelity to the original document and avoids complex event handling.
+//! Table of Contents generation for markdown documents.
+//!
+//! This module extracts headings from markdown and generates compact table of contents
+//! summaries for navigation. Headings are preserved exactly as they appear in the source,
+//! including all markdown syntax (links, formatting, trailing hashes, etc), except for
+//! empty anchor links which are automatically removed.
+//!
+//! # Design Philosophy
+//!
+//! Preserve exact source content rather than reconstructing cleaned text.
+//! This maintains fidelity to the original document and avoids complex event handling.
+//!
+//! # Example
+//!
+//! ```
+//! use llms_fetch_mcp::toc::{generate_toc, TocConfig};
+//!
+//! let markdown = "# Title\n\n## Section\n\nContent here.";
+//! let config = TocConfig::default();
+//! let toc = generate_toc(markdown, markdown.len(), &config);
+//! ```
 
 use pulldown_cmark::{Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 
-/// Configuration for `ToC` generation.
-/// Budget and threshold are in bytes (not tokens).
+/// Configuration for table of contents generation.
+///
+/// Both `toc_budget` and `full_content_threshold` are measured in bytes.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TocConfig {
+    /// Maximum size of the generated `ToC` in bytes (default: 4000).
+    ///
+    /// The algorithm selects the deepest heading level that fits within this budget.
+    /// For example, if H1-H3 headings exceed the budget but H1-H2 fit, only H1-H2
+    /// headings will be included.
     pub toc_budget: usize,
+
+    /// Minimum document size in bytes to generate a `ToC` (default: 8000).
+    ///
+    /// Documents smaller than this threshold return `None` - the full content is
+    /// already small enough that a `ToC` isn't useful.
     pub full_content_threshold: usize,
 }
 
@@ -26,10 +50,25 @@ impl Default for TocConfig {
     }
 }
 
+/// A heading extracted from markdown.
+///
+/// Preserves the original heading text exactly as it appears in the source,
+/// including hash marks, formatting, and any markdown syntax, except empty
+/// anchor links (like `[](#anchor)` or `[​](#anchor)`) which are removed.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Heading {
+    /// Heading level from 1 (H1) to 6 (H6).
     pub level: u8,
+
+    /// Line number where this heading appears in the source (1-indexed).
     pub line_number: usize,
+
+    /// Full heading text including hash marks and any formatting.
+    ///
+    /// Examples:
+    /// - `"# Main Title"`
+    /// - `"## Section [link](url)"`
+    /// - `"### Code with backticks"`
     pub text: String,
 }
 
@@ -178,14 +217,18 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
     headings
 }
 
-fn find_optimal_level(headings: &[Heading], budget: usize) -> Option<u8> {
+/// Find the optimal heading level that fits within budget and return both level and rendered `ToC`.
+///
+/// Returns the deepest heading level (highest number) where the rendered `ToC` fits within
+/// the budget, along with the rendered `ToC` string. This avoids rendering twice.
+fn find_optimal_level(headings: &[Heading], budget: usize) -> Option<(u8, String)> {
     if headings.is_empty() {
         return None;
     }
 
     let max_level = headings.iter().map(|h| h.level).max().unwrap_or(1);
 
-    let mut best = None;
+    let mut best: Option<(u8, String)> = None;
     for level in 1..=max_level {
         let rendered = render_toc(headings, level);
         if rendered.is_empty() {
@@ -194,7 +237,7 @@ fn find_optimal_level(headings: &[Heading], budget: usize) -> Option<u8> {
 
         let byte_size = rendered.len();
         if byte_size <= budget {
-            best = Some(level);
+            best = Some((level, rendered));
         } else {
             break; // Stop when budget exceeded
         }
@@ -221,8 +264,42 @@ fn render_toc(headings: &[Heading], max_level: u8) -> String {
         .join("\n")
 }
 
-pub fn generate_toc(markdown: &str, total_chars: usize, config: &TocConfig) -> Option<String> {
-    if total_chars < config.full_content_threshold {
+/// Generates a table of contents for markdown content.
+///
+/// Returns a formatted table of contents with line numbers and headings, or `None` if:
+/// - The document is too small (below `full_content_threshold`)
+/// - No headings are found
+/// - No heading level fits within the budget
+///
+/// # Arguments
+///
+/// * `markdown` - The markdown content to extract headings from
+/// * `total_bytes` - Total size of the content in bytes (used for threshold check)
+/// * `config` - Configuration controlling `ToC` generation behavior
+///
+/// # Returns
+///
+/// A formatted table of contents string with one heading per line, or `None` if no
+/// `ToC` should be generated. Each line has the format: `{line_number}→{heading_text}`
+///
+/// The algorithm adaptively selects the deepest heading level that fits within
+/// `config.toc_budget`. For example, if H1-H3 exceed the budget but H1-H2 fit,
+/// only H1-H2 headings are included.
+///
+/// # Example
+///
+/// ```
+/// use llms_fetch_mcp::toc::{generate_toc, TocConfig};
+///
+/// let markdown = "# Title\n\n## Section 1\n\n## Section 2";
+/// let config = TocConfig::default();
+///
+/// if let Some(toc) = generate_toc(markdown, markdown.len(), &config) {
+///     println!("Table of Contents:\n{}", toc);
+/// }
+/// ```
+pub fn generate_toc(markdown: &str, total_bytes: usize, config: &TocConfig) -> Option<String> {
+    if total_bytes < config.full_content_threshold {
         return None;
     }
 
@@ -231,9 +308,8 @@ pub fn generate_toc(markdown: &str, total_chars: usize, config: &TocConfig) -> O
         return None;
     }
 
-    let optimal_level = find_optimal_level(&headings, config.toc_budget)?;
+    let (_level, toc) = find_optimal_level(&headings, config.toc_budget)?;
 
-    let toc = render_toc(&headings, optimal_level);
     if toc.is_empty() { None } else { Some(toc) }
 }
 
@@ -327,6 +403,32 @@ mod tests {
     }
 
     #[test]
+    fn test_crlf_line_endings() {
+        // Windows-style CRLF line endings should be counted correctly
+        let md = "# First\r\n## Second\r\n### Third";
+        let headings = extract_headings(md);
+        assert_eq!(headings.len(), 3);
+        assert_eq!(headings[0].line_number, 1);
+        assert_eq!(headings[1].line_number, 2);
+        assert_eq!(headings[2].line_number, 3);
+        assert_eq!(headings[0].text, "# First");
+        assert_eq!(headings[1].text, "## Second");
+        assert_eq!(headings[2].text, "### Third");
+    }
+
+    #[test]
+    fn test_mixed_line_endings() {
+        // Mix of LF and CRLF should still count correctly
+        let md = "# First\n## Second\r\n### Third\n#### Fourth";
+        let headings = extract_headings(md);
+        assert_eq!(headings.len(), 4);
+        assert_eq!(headings[0].line_number, 1);
+        assert_eq!(headings[1].line_number, 2);
+        assert_eq!(headings[2].line_number, 3);
+        assert_eq!(headings[3].line_number, 4);
+    }
+
+    #[test]
     fn test_level_selection() {
         let headings = vec![
             Heading {
@@ -346,9 +448,10 @@ mod tests {
             },
         ];
 
-        let level = find_optimal_level(&headings, 400);
-        assert!(level.is_some());
-        assert!(level.unwrap() >= 1);
+        let result = find_optimal_level(&headings, 400);
+        assert!(result.is_some());
+        let (level, _toc) = result.unwrap();
+        assert!(level >= 1);
     }
 
     #[test]
