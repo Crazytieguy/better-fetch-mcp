@@ -24,11 +24,11 @@ struct Cli {
     cache_dir: Option<PathBuf>,
 
     /// Maximum `ToC` size in bytes
-    #[arg(long, default_value_t = 4000)]
+    #[arg(long, default_value_t = toc::DEFAULT_TOC_BUDGET)]
     toc_budget: usize,
 
     /// Minimum document size in bytes to generate `ToC`
-    #[arg(long, default_value_t = 8000)]
+    #[arg(long, default_value_t = toc::DEFAULT_TOC_THRESHOLD)]
     toc_threshold: usize,
 }
 

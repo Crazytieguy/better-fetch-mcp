@@ -22,6 +22,12 @@
 
 use pulldown_cmark::{Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 
+/// Default maximum size of generated `ToC` in bytes
+pub const DEFAULT_TOC_BUDGET: usize = 4000;
+
+/// Default minimum document size to generate `ToC`
+pub const DEFAULT_TOC_THRESHOLD: usize = 8000;
+
 /// Configuration for table of contents generation.
 ///
 /// Both `toc_budget` and `full_content_threshold` are measured in bytes.
@@ -44,8 +50,8 @@ pub struct TocConfig {
 impl Default for TocConfig {
     fn default() -> Self {
         Self {
-            toc_budget: 4000,
-            full_content_threshold: 8000,
+            toc_budget: DEFAULT_TOC_BUDGET,
+            full_content_threshold: DEFAULT_TOC_THRESHOLD,
         }
     }
 }
@@ -72,11 +78,11 @@ pub struct Heading {
     pub text: String,
 }
 
-/// Check if text is empty or contains only whitespace/invisible characters.
+/// Check if text is empty or contains only whitespace/invisible/permalink characters.
 ///
 /// Regular `trim()` doesn't remove zero-width spaces (U+200B), which are commonly
 /// inserted by documentation generators in empty anchor links like `[​](#anchor)`.
-/// We check for specific invisible Unicode characters that appear in real-world docs.
+/// We also exclude common permalink indicators like pilcrow (¶) which appear as `[¶](#anchor)`.
 fn is_empty_or_invisible(text: &str) -> bool {
     text.chars().all(|c| {
         c.is_whitespace()
@@ -84,6 +90,7 @@ fn is_empty_or_invisible(text: &str) -> bool {
             || c == '\u{FEFF}' // ZERO WIDTH NO-BREAK SPACE
             || c == '\u{200C}' // ZERO WIDTH NON-JOINER
             || c == '\u{200D}' // ZERO WIDTH JOINER
+            || c == '\u{00B6}' // PILCROW SIGN (¶) - common permalink indicator
     })
 }
 
@@ -818,8 +825,8 @@ mod tests {
         #[test]
         fn test_config_default_values() {
             let config = TocConfig::default();
-            assert_eq!(config.toc_budget, 4000);
-            assert_eq!(config.full_content_threshold, 8000);
+            assert_eq!(config.toc_budget, DEFAULT_TOC_BUDGET);
+            assert_eq!(config.full_content_threshold, DEFAULT_TOC_THRESHOLD);
         }
     }
 }
