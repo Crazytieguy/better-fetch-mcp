@@ -40,7 +40,7 @@ expression: toc.unwrap_or_default()
   451→# AI Agents
   453→## Building AI Agents with Convex
   459→## Agent Component
-  486→##
+  486→## [Build your first Agent](/agents/getting-started.md)
   531→## Agent Definition and Usage
   535→# Agent Definition and Usage
   543→## Basic Agent definition
@@ -142,7 +142,7 @@ expression: toc.unwrap_or_default()
  3134→## Complex workflow patterns
  3168→## AI Code Generation
  3172→# AI Code Generation
- 3174→##
+ 3174→## [Prompt to build an app with Convex Chef](https://chef.convex.dev)
  3185→## Convex AI rules
  3201→## Using Convex with Background Agents
  3221→## Convex MCP Server
@@ -601,7 +601,7 @@ expression: toc.unwrap_or_default()
 21054→## HTTP Actions
 21081→## Chef
 21085→# Chef
-21091→##
+21091→## [Prompt to start an app with Convex Chef](https://chef.convex.dev)
 21095→## Deploying to production
 21166→## Integrations
 21199→## FAQs
@@ -661,7 +661,7 @@ expression: toc.unwrap_or_default()
 22301→# Next.js
 22313→## Getting started
 22317→## Calling Convex functions from client code
-22321→##
+22321→## [Convex React library documentation](/client/react.md)
 22323→## Server rendering (SSR)
 22331→## Adding authentication
 22404→## Next.js Server Rendering
@@ -745,29 +745,29 @@ expression: toc.unwrap_or_default()
 24376→# Nuxt
 24395→## Components
 24399→# Components
-24411→##
+24411→## [Full Components Directory](https://convex.dev/components)
 24413→## Durable Functions
-24415→##
-24419→##
-24423→##
-24427→##
+24415→## [Workflow](https://www.convex.dev/components/workflow)
+24419→## [Workpool](https://www.convex.dev/components/workpool)
+24423→## [Crons](https://www.convex.dev/components/crons)
+24427→## [Action Retrier](https://www.convex.dev/components/retrier)
 24431→## Database
-24433→##
-24437→##
-24441→##
-24445→##
+24433→## [Sharded Counter](https://www.convex.dev/components/sharded-counter)
+24437→## [Migrations](https://www.convex.dev/components/migrations)
+24441→## [Aggregate](https://www.convex.dev/components/aggregate)
+24445→## [Geospatial (Beta)](https://www.convex.dev/components/geospatial)
 24449→## Integrations
-24451→##
-24455→##
-24459→##
-24463→##
-24467→##
-24471→##
+24451→## [Cloudflare R2](https://www.convex.dev/components/cloudflare-r2)
+24455→## [Collaborative Text Editor Sync](https://www.convex.dev/components/prosemirror-sync)
+24459→## [Expo Push Notifications](https://www.convex.dev/components/push-notifications)
+24463→## [Twilio SMS](https://www.convex.dev/components/twilio)
+24467→## [LaunchDarkly Feature Flags](https://www.convex.dev/components/launchdarkly)
+24471→## [Polar](https://www.convex.dev/components/polar)
 24475→## Backend
-24477→##
-24481→##
-24485→##
-24489→##
+24477→## [AI Agent](https://www.convex.dev/components/agent)
+24481→## [Persistent Text Streaming](https://www.convex.dev/components/persistent-text-streaming)
+24485→## [Rate Limiter](https://www.convex.dev/components/rate-limiter)
+24489→## [Action Cache](https://www.convex.dev/components/action-cache)
 24497→## Understanding Components
 24531→## Using Components
 24535→# Using Components
@@ -843,7 +843,7 @@ expression: toc.unwrap_or_default()
 25311→## Tables
 25325→## Documents
 25339→## Schemas
-25360→##
+25360→## [Next: Reading Data](/database/reading-data.md)
 25373→## OCC and Atomicity
 25377→# OCC and Atomicity
 25381→## Convex Financial, Inc.
@@ -1324,7 +1324,7 @@ expression: toc.unwrap_or_default()
 37032→## Future development
 37045→## Self Hosting
 37049→# Self Hosting
-37055→##
+37055→## [Self-hosting guide](https://github.com/get-convex/convex-backend/blob/main/self-hosted/README.md)
 37061→## Open Source Convex Backend
 37067→## Other Convex Open Source Projects
 37092→## Streaming Export
@@ -1368,7 +1368,7 @@ expression: toc.unwrap_or_default()
 38044→## Your first `query`
 38105→## What you built
 38115→## Next up
-38121→##
+38121→## [Calling external services](/tutorial/actions.md)
 38128→## Convex Tutorial: Calling external services
 38132→# Convex Tutorial: Calling external services
 38146→## Your first `action`
@@ -1376,13 +1376,13 @@ expression: toc.unwrap_or_default()
 38257→## The scheduler, actions, and the sync engine
 38271→## What you built
 38277→## Next up
-38283→##
+38283→## [Scaling your app](/tutorial/scale.md)
 38290→## Convex Tutorial: Scaling your app
 38294→# Convex Tutorial: Scaling your app
 38302→## Indexed queries
 38308→## Too many writes on the same document
 38316→## Scaling best practices with Convex Components
-38324→##
+38324→## [Components directory](https://www.convex.dev/components)
 38326→## Wrap up
 38337→## Convex Overview
 38341→# Convex Overview

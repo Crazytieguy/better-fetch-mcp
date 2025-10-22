@@ -33,19 +33,46 @@ pub struct Heading {
     pub text: String,
 }
 
+/// Check if text is empty or contains only whitespace/invisible characters.
+/// Regular `trim()` doesn't remove zero-width spaces (U+200B), so we check char-by-char.
+fn is_empty_or_invisible(text: &str) -> bool {
+    text.chars().all(|c| {
+        c.is_whitespace()
+            || c == '\u{200B}' // ZERO WIDTH SPACE
+            || c == '\u{FEFF}' // ZERO WIDTH NO-BREAK SPACE
+            || c == '\u{200C}' // ZERO WIDTH NON-JOINER
+            || c == '\u{200D}' // ZERO WIDTH JOINER
+    })
+}
+
 /// Extracts heading information from markdown.
 ///
 /// Uses pulldown-cmark events and their byte offsets to extract heading text,
-/// automatically excluding trailing links (which are typically anchor links).
+/// automatically excluding empty anchor links (links with no text like `[](#anchor)`).
 ///
 /// Streams through events with a state machine:
 /// - Track when we enter/exit a heading
-/// - Record the byte offset of the first link within each heading
-/// - Extract text from heading start to link start (or heading end if no link)
+/// - Track when we enter/exit a link within a heading
+/// - Record which links are empty (no Text/Code events inside them)
+/// - Extract full heading text, excluding byte ranges of empty links
 fn extract_headings(markdown: &str) -> Vec<Heading> {
+    use std::ops::Range;
+
+    struct HeadingState {
+        level: HeadingLevel,
+        start: usize,
+        line_number: usize,
+        empty_link_ranges: Vec<Range<usize>>,
+        current_link: Option<LinkState>,
+    }
+
+    struct LinkState {
+        start: usize,
+        text_content: String,
+    }
+
     let mut headings = Vec::new();
-    // Track current heading: (level, start_byte, first_link_byte, line_number)
-    let mut current_heading: Option<(HeadingLevel, usize, Option<usize>, usize)> = None;
+    let mut current_heading: Option<HeadingState> = None;
 
     // Track line number incrementally to avoid O(n*h) rescanning
     let mut current_line = 1;
@@ -63,24 +90,71 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
 
         match event {
             Event::Start(Tag::Heading { level, .. }) => {
-                current_heading = Some((level, range.start, None, current_line));
+                current_heading = Some(HeadingState {
+                    level,
+                    start: range.start,
+                    line_number: current_line,
+                    empty_link_ranges: Vec::new(),
+                    current_link: None,
+                });
             }
             Event::Start(Tag::Link { .. }) => {
-                // Record first link position if we're inside a heading
-                if let Some((_, _, link_pos, _)) = &mut current_heading
-                    && link_pos.is_none()
+                if let Some(heading) = &mut current_heading {
+                    heading.current_link = Some(LinkState {
+                        start: range.start,
+                        text_content: String::new(),
+                    });
+                }
+            }
+            Event::Text(text) | Event::Code(text) => {
+                // Collect text content from current link
+                if let Some(heading) = &mut current_heading
+                    && let Some(link) = &mut heading.current_link
                 {
-                    *link_pos = Some(range.start);
+                    link.text_content.push_str(&text);
+                }
+            }
+            Event::End(TagEnd::Link) => {
+                if let Some(heading) = &mut current_heading
+                    && let Some(link) = heading.current_link.take()
+                {
+                    // If link text is empty or only invisible chars, exclude it
+                    if is_empty_or_invisible(&link.text_content) {
+                        heading.empty_link_ranges.push(link.start..range.end);
+                    }
                 }
             }
             Event::End(TagEnd::Heading(_)) => {
-                if let Some((level, start, link_at, line_number)) = current_heading.take() {
-                    // Extract text: heading start to link start (or heading end if no link)
-                    let content_end = link_at.unwrap_or(range.end);
-                    let text = markdown.get(start..content_end).unwrap_or("").trim();
+                if let Some(heading) = current_heading.take() {
+                    // Extract full heading text
+                    let full_text = markdown.get(heading.start..range.end).unwrap_or("");
+
+                    // Build text excluding empty link ranges
+                    let mut text = String::new();
+                    let mut last_end = 0;
+
+                    for empty_range in &heading.empty_link_ranges {
+                        // Convert absolute byte offsets to relative (from heading start)
+                        let relative_start = empty_range.start.saturating_sub(heading.start);
+                        let relative_end = empty_range.end.saturating_sub(heading.start);
+
+                        // Add text before this empty link
+                        if last_end < relative_start && relative_start <= full_text.len() {
+                            text.push_str(&full_text[last_end..relative_start]);
+                        }
+                        // Skip the empty link itself, update position
+                        last_end = relative_end;
+                    }
+
+                    // Add remaining text after last empty link
+                    if last_end < full_text.len() {
+                        text.push_str(&full_text[last_end..]);
+                    }
+
+                    let text = text.trim();
 
                     if !text.is_empty() {
-                        let level_num = match level {
+                        let level_num = match heading.level {
                             HeadingLevel::H1 => 1,
                             HeadingLevel::H2 => 2,
                             HeadingLevel::H3 => 3,
@@ -91,7 +165,7 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
 
                         headings.push(Heading {
                             level: level_num,
-                            line_number,
+                            line_number: heading.line_number,
                             text: text.to_string(),
                         });
                     }
@@ -211,15 +285,15 @@ mod tests {
     }
 
     #[test]
-    fn test_trailing_links_excluded() {
-        // Trailing anchor links should be excluded
+    fn test_empty_links_excluded() {
+        // Empty anchor links should be excluded
         let md = "## Writing markup with JSX [](#writing-markup-with-jsx)";
         let headings = extract_headings(md);
         assert_eq!(headings.len(), 1);
         assert_eq!(headings[0].text, "## Writing markup with JSX");
 
-        // Multiple trailing links - stops at first one
-        let md2 = "### Title [](#anchor1) [more](#anchor2)";
+        // Multiple empty links - all excluded
+        let md2 = "### Title [](#anchor1) [](#anchor2)";
         let headings2 = extract_headings(md2);
         assert_eq!(headings2.len(), 1);
         assert_eq!(headings2[0].text, "### Title");
@@ -230,11 +304,17 @@ mod tests {
         assert_eq!(headings3.len(), 1);
         assert_eq!(headings3[0].text, "# Simple Heading");
 
-        // Link with text in middle - still excluded (stops at first link)
+        // Link with text - KEPT (not excluded)
         let md4 = "## Title [link](url) more text";
         let headings4 = extract_headings(md4);
         assert_eq!(headings4.len(), 1);
-        assert_eq!(headings4[0].text, "## Title");
+        assert_eq!(headings4[0].text, "## Title [link](url) more text");
+
+        // Mix of empty and non-empty links
+        let md5 = "## Check [docs](url) for details [](#anchor)";
+        let headings5 = extract_headings(md5);
+        assert_eq!(headings5.len(), 1);
+        assert_eq!(headings5[0].text, "## Check [docs](url) for details");
     }
 
     #[test]
