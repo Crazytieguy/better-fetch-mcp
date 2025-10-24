@@ -1,0 +1,26 @@
+---
+source: src/toc.rs
+expression: toc.unwrap_or_default()
+---
+   1→# Installation
+  23→## Meet Laravel
+  32→### Why Laravel?
+  36→#### A Progressive Framework
+  42→#### A Scalable Framework
+  48→#### A Community Framework
+  53→## Creating a Laravel Application
+  56→### Installing PHP and the Laravel Installer
+  87→### Creating an Application
+ 109→## Initial Configuration
+ 116→### Environment Based Configuration
+ 126→### Databases and Migrations
+ 153→### Directory Configuration
+ 158→## Installation Using Herd
+ 168→### Herd on macOS
+ 188→### Herd on Windows
+ 208→## IDE Support
+ 217→## Laravel and AI
+ 228→### Installing Laravel Boost
+ 248→## Next Steps
+ 266→### Laravel the Full Stack Framework
+ 278→### Laravel the API Backend

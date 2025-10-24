@@ -1,0 +1,13 @@
+---
+source: src/toc.rs
+expression: toc.unwrap_or_default()
+---
+  3→[Play Online](https://angular.dev/#play-online)
+  8→[Set up a new project locally](https://angular.dev/#set-up-a-new-project-locally)
+ 13→### [Prerequisites](https://angular.dev/#prerequisites) ###
+ 20→### [Instructions](https://angular.dev/#instructions) ###
+ 24→#### [Install Angular CLI](https://angular.dev/#install-angular-cli) ####
+ 46→#### [Create a new project](https://angular.dev/#create-a-new-project) ####
+ 66→#### [Running your new project locally](https://angular.dev/#running-your-new-project-locally) ####
+ 88→### [Using AI for Development](https://angular.dev/#using-ai-for-development) ###
+ 92→[Next steps](https://angular.dev/#next-steps)

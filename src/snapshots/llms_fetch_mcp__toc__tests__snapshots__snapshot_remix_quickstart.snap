@@ -1,0 +1,12 @@
+---
+source: src/toc.rs
+expression: toc.unwrap_or_default()
+---
+   5→Installation
+  30→Vite Config
+  50→The Root Route
+  92→Build and Run
+ 136→Bring Your Own Server
+ 195→Development Workflow
+ 263→Controlling Server and Browser Entries
+ 279→Summary

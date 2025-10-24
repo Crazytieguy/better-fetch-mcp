@@ -1,0 +1,18 @@
+---
+source: src/toc.rs
+expression: toc.unwrap_or_default()
+---
+   3→# Why Astro?
+   9→## Features
+  24→## Design Principles
+  38→### Content-driven
+  48→### Server-first
+  60→### Fast by default
+  79→### Easy to use
+  93→### Developer-focused
+ 105→# Islands architecture
+ 111→## A brief history
+ 128→## What is an island?
+ 138→## Island components
+ 171→## Client Islands
+ 199→### Benefits of client islands

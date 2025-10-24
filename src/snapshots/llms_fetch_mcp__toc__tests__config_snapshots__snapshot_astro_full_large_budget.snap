@@ -1,0 +1,389 @@
+---
+source: src/toc.rs
+expression: toc.unwrap_or_default()
+---
+    3→# Why Astro?
+  105→# Islands architecture
+  252→# Install Astro
+  606→# Project structure
+  783→# Develop and build
+  913→# Configuration overview
+ 1060→# Astro Courses
+ 1092→# Components
+ 1556→# Pages
+ 1794→# Layouts
+ 2097→# Contribute to Astro
+ 2586→# Editor setup
+ 2770→# Astro Docs
+ 2809→# Actions
+ 3665→# Astro DB
+ 4569→# Authentication
+ 4898→# Use a backend service with Astro
+ 4965→# Appwrite & Astro
+ 4977→# Firebase & Astro
+ 6071→# Neon Postgres & Astro
+ 6191→# Prisma Postgres & Astro
+ 6412→# Monitor your Astro Site with Sentry
+ 6506→# Supabase & Astro
+ 7144→# Turso & Astro
+ 7296→# Xata & Astro
+ 7426→# Building Astro sites with AI tools
+ 7761→# Scripts and event handling
+ 8038→# Use a CMS with Astro
+ 8238→# ApostropheCMS & Astro
+ 8790→# Builder.io & Astro
+ 9213→# ButterCMS & Astro
+ 9366→# Caisy & Astro
+ 9433→# CloudCannon & Astro
+ 9463→# Contentful & Astro
+10123→# Cosmic & Astro
+10410→# Craft CMS & Astro
+10431→# Craft Cross CMS & Astro
+10444→# Crystallize & Astro
+10495→# DatoCMS & Astro
+10742→# Decap CMS & Astro
+10922→# Directus & Astro
+10944→# Drupal & Astro
+11585→# Flotiq & Astro
+11925→# Front Matter CMS & Astro
+12149→# Ghost & Astro
+12504→# GitCMS & Astro
+12518→# Hashnode & Astro
+12931→# Hygraph & Astro
+13075→# Keystatic & Astro
+13336→# KeystoneJS & Astro
+13342→# Kontent.ai & Astro
+13988→# microCMS & Astro
+14001→# Optimizely CMS & Astro
+14020→# Payload CMS & Astro
+14275→# Prepr CMS & Astro
+14553→# Prismic & Astro
+14565→# Sanity & Astro
+14587→# Sitecore Experience Manager & Astro
+14615→# Sitepins & Astro
+14641→# Spinal & Astro
+14673→# Headless Statamic & Astro
+14811→# Storyblok & Astro
+15454→# Strapi & Astro
+15967→# StudioCMS & Astro
+15981→# Tina CMS & Astro
+16151→# Umbraco & Astro
+16421→# Headless WordPress & Astro
+16685→# Content collections
+17470→# Data fetching
+17601→# Deploy your Astro Site
+17882→# Deploy your Astro Site to AWS
+18245→# Deploy your Astro Site to Azion
+18376→# Deploy your Astro Site with Buddy
+18409→# Deploy your Astro Site with Cleavr
+18461→# Deploy your Astro Site to Clever Cloud
+18578→# Deploy your Astro Site to Cloudflare
+18790→# Deploy your Astro Site with CloudRay
+18827→# Deploy your Astro Site with Deno
+19184→# Deploy your Astro Site to Fleek
+19263→# Deploy your Astro Site to AWS with Flightcontrol
+19296→# Deploy your Astro Site to Fly.io
+19350→# Deploy your Astro Site to GitHub Pages
+19525→# Deploy your Astro Site to GitLab Pages
+19655→# Deploy your Astro Site to Google Cloud
+19749→# Deploy your Astro Site to Google’s Firebase Hosting
+19883→# Deploy your Astro Site to Heroku
+19947→# Deploy your Astro Site to Kinsta Application Hosting
+20070→# Deploy your Astro Site to Microsoft Azure
+20126→# Deploy your Astro Site to Netlify
+20251→# Deploy your Astro Site with Railway
+20307→# Deploy your Astro Site to Render
+20330→# Deploy your Astro Site to AWS with SST
+20382→# Deploy your Astro Site to Stormkit
+20404→# Deploy your Astro Site to Surge
+20434→# Deploy your Astro Site to Vercel
+20543→# Deploy your Astro Site to Zeabur
+20606→# Deploy your Astro Site to Zerops
+20886→# Dev toolbar
+20991→# E-commerce
+21233→# Endpoints
+21526→# Using environment variables
+21936→# Using custom fonts
+22079→# Front-end frameworks
+22378→# Images
+23185→# Imports reference
+23637→# Add Integrations
+24017→# @astrojs/alpinejs
+24203→# @astrojs/cloudflare
+24927→# @astrojs/db
+25295→# @deno/astro-adapter
+25305→# Lit
+25326→# @astrojs/markdoc
+26113→# @astrojs/mdx
+26600→# @astrojs/netlify
+27097→# @astrojs/node
+27482→# @astrojs/partytown
+27719→# @astrojs/preact
+27976→# @astrojs/prefetch
+27986→# @astrojs/react
+28299→# @astrojs/sitemap
+28908→# @astrojs/solid-js
+29155→# @astrojs/svelte
+29320→# @astrojs/tailwind
+29330→# @astrojs/vercel
+29905→# @astrojs/vue
+30183→# Internationalization (i18n) Routing
+30621→# Markdown in Astro
+31115→# Image and video hosting with Astro
+31159→# Cloudinary & Astro
+31421→# Mux & Astro
+31843→# Middleware
+32175→# Migrate an existing project to Astro
+32281→# Migrating from Create React App (CRA)
+32720→# Migrating from Docusaurus
+32796→# Migrating from Eleventy
+32870→# Migrating from Gatsby
+33536→# Migrating from GitBook
+33614→# Migrating from Gridsome
+33692→# Migrating from Hugo
+33768→# Migrating from Jekyll
+33844→# Migrating from Next.js
+34524→# Migrating from NuxtJS
+35317→# Migrating from Pelican
+35387→# Migrating from SvelteKit
+35463→# Migrating from VuePress
+35533→# Migrating from WordPress
+35627→# On-demand rendering
+35988→# Prefetch
+36307→# Routing
+36969→# Server islands
+37105→# Sessions
+37290→# Styles and CSS
+38210→# Syntax Highlighting
+38468→# Testing
+38938→# Troubleshooting
+39218→# TypeScript
+39680→# Legacy v0.x Upgrade Guide
+40441→# Upgrade to Astro v2
+40953→# Upgrade to Astro v3
+42209→# Upgrade to Astro v4
+42689→# Upgrade to Astro v5
+44200→# View transitions
+45084→# Astro recipes
+45186→# Installing a Vite or Rollup plugin
+45254→# Analyze bundle size
+45338→# Build a custom image component
+45483→# Build HTML forms in Astro pages
+45711→# Build forms with API routes
+46189→# Use Bun with Astro
+46311→# Call endpoints from the server
+46361→# Verify a Captcha
+46450→# Customize file names in the build output
+46561→# Build your Astro site with Docker
+46797→# Dynamically import images
+46966→# Add icons to external links
+47036→# Add i18n features
+47622→# Create a dev toolbar app
+47981→# Add last modified time
+48146→# Add reading time
+48275→# Add an RSS feed
+48600→# Share state between Astro components
+48698→# Share state between islands
+49476→# Using streaming to improve page performance
+49586→# Style rendered Markdown with Tailwind Typography
+49695→# Astro Adapter API
+50442→# Astro render context
+51664→# Template expressions reference
+52026→# CLI Commands
+52589→# Configuration Reference
+54357→# Astro Container API (experimental)
+54813→# Astro Content Loader API
+55504→# Dev Toolbar App API
+56444→# Template directives reference
+56820→# Error reference
+57097→# Action unexpected called from the server.
+57111→# Action not found.
+57121→# An invalid Action query string was passed by a form.
+57139→# Can't load the Astro actions.
+57149→# Action handler returned invalid data.
+57163→# An invalid Action query string was passed by a form.
+57181→# Actions must be used with server output.
+57195→# Adapter does not support server output.
+57211→# Astro.glob() did not match any files.
+57225→# Astro.glob() used outside of an Astro file.
+57239→# Astro.response.headers must not be reassigned.
+57249→# Cannot determine weight and style from font file.
+57259→# Cannot extract the font type from the given URL.
+57269→# Cannot fetch the given font file.
+57279→# Cannot load font provider
+57289→# Astro can't render the route.
+57299→# Cannot use the astro:config module without enabling the experimental feature.
+57313→# Astro.clientAddress is not available in current adapter.
+57328→# Collection does not exist
+57342→# Legacy configuration detected.
+57356→# Specified configuration file not found.
+57370→# Collection contains entries of a different type.
+57384→# Content entry data does not match schema.
+57397→# Content entry is missing an ID
+57409→# Content loader returned an entry with an invalid id.
+57424→# Content Schema should not contain slug.
+57438→# Could not transform image.
+57454→# CSP feature isn't enabled
+57464→# CSS Syntax Error.
+57476→# Data collection entry failed to parse.
+57486→# Duplicate content entry slug.
+57496→# The endpoint did not return a Response.
+57520→# Invalid Environment Variable
+57534→# Invalid Environment Variables
+57544→# Unsupported astro:env getSecret
+57558→# Expected src to be an image.
+57587→# Expected image options.
+57611→# Expected image options, not an ESM-imported image.
+57632→# Experimental fonts are not enabled
+57642→# Failed to retrieve remote image dimensions
+57652→# Astro couldn't find the correct page to render
+57662→# Could not import file.
+57678→# Glob patterns are not supported in the file loader
+57692→# File parser not found
+57706→# Font family not found
+57716→# Forbidden rewrite to a static route.
+57728→# Failed to generate content types.
+57742→# Invalid use of getDataEntryById or getEntryBySlug function.
+57752→# Missing params property on getStaticPaths route.
+57783→# Invalid value for getStaticPaths route parameter.
+57828→# getStaticPaths RSS helper is not available anymore.
+57846→# getStaticPaths() function required for dynamic routes.
+57862→# The path doesn't contain any locale
+57872→# i18n Not Enabled
+57899→# Image missing required "alt" property.
+57917→# Image not found.
+57933→# Cannot set both densities and widths
+57947→# You can't use the current function with the current strategy
+57961→# Invalid component arguments.
+57972→# Content entry data does not match schema.
+57985→# Content entry frontmatter does not match schema.
+57998→# Invalid content entry slug.
+58012→# Invalid dynamic route.
+58026→# Invalid frontmatter injection.
+58040→# Invalid value returned by a getStaticPaths path.
+58068→# Invalid entry inside getStaticPath's return value
+58093→# Invalid value returned by getStaticPaths.
+58119→# Invalid glob pattern.
+58133→# Error while loading image service.
+58149→# Invalid prerender export.
+58160→# You attempted to rewrite a 404 inside a static page, and this isn't allowed.
+58174→# Error in live content config.
+58189→# Local images must be imported.
+58228→# Value assigned to locals is not accepted.
+58248→# Astro.locals is not serializable
+58276→# locals must not be reassigned.
+58286→# Content collection frontmatter invalid.
+58303→# Failed to parse Markdown frontmatter.
+58316→# Image not found.
+58336→# MDX integration missing.
+58350→# Can't load the middleware.
+58370→# The middleware didn't return a Response.
+58390→# The middleware returned something that is not a Response object.
+58409→# Missing image dimensions
+58426→# Index page not found.
+58441→# The provided locale does not exist.
+58451→# Missing value for client:media directive.
+58469→# Enabled manual internationalization routing without having a middleware.
+58479→# Could not find Sharp.
+58505→# Content and data cannot be in same collection.
+58519→# Cannot use Server-side Rendering without an adapter.
+58533→# Cannot use Server Islands without an adapter.
+58547→# No client entrypoint specified in renderer.
+58562→# Missing hint on client:only directive.
+58580→# Could not process image metadata.
+58594→# No import found for component.
+58604→# No matching renderer found.
+58621→# No static path found for requested path.
+58635→# Prerendered routes aren't supported when internationalization domains are enabled.
+58645→# Invalid type returned by Astro page.
+58674→# Page number param not found.
+58688→# Astro.clientAddress cannot be used inside prerendered routes.
+58703→# Prerendered dynamic endpoint has path collision.
+58720→# Prerendered route generates the same path as another route.
+58735→# A redirect must be given a location with the Location header.
+58747→# Attempted to render an undefined content collection entry.
+58755→# Invalid slot name.
+58769→# Unable to set response.
+58783→# Astro couldn't find the route to rewrite, or if was found but it emitted an error during the rendering phase.
+58797→# Cannot use Astro.rewrite after the request body has been read
+58819→# Route not found.
+58829→# Module is only available server-side
+58839→# Session storage was enabled but not configured.
+58857→# Session flag not set
+58875→# Session storage could not be initialized.
+58889→# Session data could not be saved.
+58903→# Sessions cannot be used with an adapter that doesn't support server output.
+58921→# Astro.clientAddress is not available in prerendered pages.
+58938→# Astro.redirect is not available in static mode.
+58959→# Unhandled rejection
+58970→# Unknown CLI Error.
+58980→# Unknown compiler error.
+58996→# Unknown configuration error.
+59010→# Unknown Content Collection Error.
+59020→# Unknown CSS Error.
+59032→# An unknown error occurred while reading or writing files to disk.
+59040→# Unknown Markdown Error.
+59048→# Unknown Vite Error.
+59062→# Unsupported transform in content config.
+59077→# Unsupported or malformed URL.
+59091→# Unsupported image conversion
+59105→# Unsupported image format
+59126→# Configuring experimental flags
+59150→# Experimental Chrome DevTools workspace
+59192→# Experimental client prerendering
+59225→# Experimental Intellisense for content collections
+59246→# Experimental Content Security Policy (CSP)
+59670→# Experimental prerender conflict error
+59704→# Experimental fonts API
+60547→# Experimental Markdown heading ID compatibility
+60623→# Experimental live content collections
+61343→# Experimental preserve scripts order
+61423→# Experimental private meta environment variables inlining
+61518→# Image Service API
+62428→# Astro Integration API
+64168→# Legacy flags
+64218→# Actions API Reference
+64571→# Image and Assets API Reference
+65192→# Config imports API Reference
+65315→# Content Collections API Reference
+65668→# Environment Variables API Reference
+65708→# Internationalization API Reference
+66074→# Middleware API Reference
+66203→# View Transitions Router API Reference
+66668→# Programmatic Astro API (experimental)
+67042→# Publish to NPM
+67383→# Routing Reference
+67767→# Build your first Astro Blog
+67794→# About this Tutorial
+67838→# Check in: Unit 1 - Setup
+67905→# Prepare your dev environment
+68002→# Create your first Astro project
+68145→# Write your first line of Astro
+68209→# Store your repository online
+68276→# Deploy your site to the web
+68345→# Check in: Unit 2 - Pages
+68371→# Create your first Astro page
+68542→# Write your first Markdown blog post
+68753→# Add dynamic content about you
+69035→# Style your About page
+69247→# Add site-wide styling
+69393→# Check in: Unit 3 - Components
+69421→# Make a reusable Navigation component
+69555→# Create a social media footer
+69780→# Build it yourself - Header
+69972→# Send your first script to the browser
+70228→# Check in: Unit 4 - Layouts
+70254→# Build your first layout
+70463→# Create and pass data to a custom blog layout
+70652→# Combine layouts to get the best of both worlds
+70784→# Check in: Unit 5 - Astro API
+70809→# Create a blog post archive
+71033→# Generate tag pages
+71381→# Build a tag index page
+71830→# Add an RSS feed
+71947→# Check in: Unit 6 - Astro Islands
+71972→# Build your first Astro island
+72179→# Back on dry land. Take your blog from day to night, no island required!
+72422→# Congratulations!
+72492→# Optional: Make a content collection
+72857→# Upgrade Astro

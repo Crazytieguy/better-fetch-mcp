@@ -1,5 +1,8 @@
 #![warn(clippy::pedantic)]
 
+mod toc;
+
+use clap::Parser;
 use dom_smoothie::{Config, Readability, TextMode};
 use rmcp::handler::server::ServerHandler;
 use rmcp::handler::server::tool::ToolRouter;
@@ -13,9 +16,26 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::fs;
 
+#[derive(Parser)]
+#[command(author, version, about = "MCP server for fetching and caching web documentation", long_about = None)]
+struct Cli {
+    /// Cache directory path (default: .llms-fetch-mcp)
+    #[arg(value_name = "CACHE_DIR")]
+    cache_dir: Option<PathBuf>,
+
+    /// Maximum `ToC` size in bytes
+    #[arg(long, default_value_t = toc::DEFAULT_TOC_BUDGET)]
+    toc_budget: usize,
+
+    /// Minimum document size in bytes to generate `ToC`
+    #[arg(long, default_value_t = toc::DEFAULT_TOC_THRESHOLD)]
+    toc_threshold: usize,
+}
+
 #[derive(Clone)]
 struct FetchServer {
     cache_dir: Arc<PathBuf>,
+    toc_config: toc::TocConfig,
     #[allow(dead_code)]
     tool_router: ToolRouter<Self>,
 }
@@ -33,6 +53,8 @@ struct FileInfo {
     lines: usize,
     words: usize,
     characters: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    table_of_contents: Option<String>,
 }
 
 #[derive(Debug, Serialize, JsonSchema)]
@@ -64,7 +86,7 @@ async fn fetch_url(client: &reqwest::Client, url: &str) -> FetchAttempt {
         )
         .header(
             "User-Agent",
-            "llms-fetch-mcp/0.1.2 (+https://github.com/crazytieguy/llms-fetch-mcp)",
+            "llms-fetch-mcp/0.1.3 (+https://github.com/crazytieguy/llms-fetch-mcp)",
         )
         .send()
         .await
@@ -241,7 +263,7 @@ fn count_stats(content: &str) -> (usize, usize, usize) {
 
 #[tool_router]
 impl FetchServer {
-    fn new(cache_dir: Option<PathBuf>) -> Self {
+    fn new(cache_dir: Option<PathBuf>, toc_budget: usize, toc_threshold: usize) -> Self {
         let cache_path = cache_dir.unwrap_or_else(|| PathBuf::from(".llms-fetch-mcp"));
         // Ensure cache_dir is absolute for security (prevents relative path bypass)
         let absolute_cache = cache_path.canonicalize().unwrap_or_else(|_| {
@@ -253,12 +275,16 @@ impl FetchServer {
 
         Self {
             cache_dir: Arc::new(absolute_cache),
+            toc_config: toc::TocConfig {
+                toc_budget,
+                full_content_threshold: toc_threshold,
+            },
             tool_router: Self::tool_router(),
         }
     }
 
     #[tool(
-        description = "Fetch web content and cache it locally with intelligent format detection. For best results, start with the root URL of a documentation site (e.g., https://docs.example.com) to discover llms.txt or llms-full.txt files, which provide LLM-optimized documentation structure. For GitHub, prefer raw.githubusercontent.com URLs. The tool automatically tries multiple format variations (.md, /index.md, /llms.txt, /llms-full.txt) concurrently. HTML is automatically cleaned and converted to Markdown. Returns cached file paths with content type and statistics."
+        description = "Use to access documentation and guides from the web. Start with documentation root URLs (e.g., https://docs.example.com) - the tool discovers llms.txt files and tries multiple formats (.md, /index.md, /llms.txt, /llms-full.txt). Content is converted to markdown and cached locally. Returns file path with table of contents for navigation. For GitHub files, use raw.githubusercontent.com URLs for best results."
     )]
     async fn fetch(
         &self,
@@ -376,6 +402,14 @@ impl FetchServer {
             })?;
 
             let (lines, words, characters) = count_stats(&content_to_save);
+
+            let table_of_contents =
+                if content_type.contains("markdown") || content_type == "html-converted" {
+                    toc::generate_toc(&content_to_save, characters, &self.toc_config)
+                } else {
+                    None
+                };
+
             file_infos.push(FileInfo {
                 path: file_path.to_string_lossy().to_string(),
                 source_url: result.url.clone(),
@@ -383,6 +417,7 @@ impl FetchServer {
                 lines,
                 words,
                 characters,
+                table_of_contents,
             });
         }
 
@@ -398,7 +433,7 @@ impl ServerHandler for FetchServer {
             capabilities: ServerCapabilities::builder().enable_tools().build(),
             server_info: Implementation::from_build_env(),
             instructions: Some(
-                "Web content fetcher with intelligent format detection for documentation. Cleans HTML and converts to Markdown. Deduplicates content automatically."
+                "Web content fetcher with intelligent format detection for documentation. Cleans HTML and converts to Markdown. Generates table of contents for navigation. Deduplicates content automatically."
                     .to_string(),
             ),
         }
@@ -407,14 +442,9 @@ impl ServerHandler for FetchServer {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<String> = std::env::args().collect();
-    let cache_dir = if args.len() > 1 {
-        Some(PathBuf::from(&args[1]))
-    } else {
-        None
-    };
+    let cli = Cli::parse();
 
-    let server = FetchServer::new(cache_dir);
+    let server = FetchServer::new(cli.cache_dir, cli.toc_budget, cli.toc_threshold);
 
     let running = server
         .serve((tokio::io::stdin(), tokio::io::stdout()))

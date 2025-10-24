@@ -1,0 +1,1428 @@
+---
+source: src/toc.rs
+expression: toc.unwrap_or_default()
+---
+    1→# Convex Documentation
+    6→## understanding
+   16→## quickstart
+   34→## functions
+   51→## database
+   73→## realtime
+   79→## auth
+   95→## scheduling
+  103→## file-storage
+  114→## search
+  122→## components
+  129→## ai
+  139→## agents
+  160→## testing
+  169→## production
+  192→## self-hosting
+  198→## cli
+  207→## client
+  235→## dashboard
+  252→## error
+  258→## eslint
+  264→## tutorial
+  272→## api
+  355→## generated-api
+  364→## http-api
+  370→## chef
+  376→## deployment-api
+  387→## deployment-platform-api
+  393→## management-api
+  409→## platform-apis
+  417→## public-deployment-api
+  430→## streaming-export-api
+  436→## streaming-import-api
+  445→# Full Documentation Content
+  447→## AI Agents
+  451→# AI Agents
+  453→## Building AI Agents with Convex
+  459→## Agent Component
+  486→## [Build your first Agent](/agents/getting-started.md)
+  531→## Agent Definition and Usage
+  535→# Agent Definition and Usage
+  543→## Basic Agent definition
+  560→## Dynamic Agent definition
+  590→## Generating text with an Agent
+  689→## Customizing the agent
+  755→## LLM Context
+  759→# LLM Context
+  769→## Customizing the context
+  804→## Full context control
+  908→## Search for messages
+  949→## Searching other threads
+  955→## Passing in messages as context
+  966→## Manage embeddings manually
+ 1045→## Debugging
+ 1049→# Debugging
+ 1051→## Debugging in the Playground
+ 1055→## Logging the raw request and response from LLM calls
+ 1071→## Logging the context messages via the contextHandler
+ 1085→## Inspecting the database in the dashboard
+ 1094→## Troubleshooting
+ 1124→## Files and Images in Agent messages
+ 1128→# Files and Images in Agent messages
+ 1141→## Running the example
+ 1150→## Sending an image by uploading first and generating asynchronously
+ 1217→## Inline saving approach
+ 1235→## Under the hood
+ 1262→## Generating images
+ 1275→## Getting Started with Agent
+ 1279→# Getting Started with Agent
+ 1285→## Installation
+ 1308→## Defining your first Agent
+ 1324→## Basic usage
+ 1348→## Human Agents
+ 1352→# Human Agents
+ 1360→## Saving a user message without generating a reply
+ 1374→## Saving a message from a human as an agent
+ 1389→## Storing additional metadata about human agents
+ 1409→## Deciding who responds next
+ 1419→## Human responses as tool calls
+ 1506→## Messages
+ 1510→# Messages
+ 1516→## Retrieving messages
+ 1545→## Showing messages in React
+ 1642→## Saving messages
+ 1701→## Configuring the storage of messages
+ 1715→## Message ordering
+ 1727→## Deleting messages
+ 1760→## Other utilities:
+ 1788→## Playground
+ 1792→# Playground
+ 1808→## Setup
+ 1851→## Running it locally
+ 1864→## RAG (Retrieval-Augmented Generation) with the Agent component
+ 1868→# RAG (Retrieval-Augmented Generation) with the Agent component
+ 1872→## What is RAG?
+ 1883→## RAG Component
+ 1906→## RAG Approaches
+ 1958→## Key Differences
+ 1968→## Ingesting content
+ 2009→## Examples in Action
+ 2031→## Rate Limiting
+ 2035→# Rate Limiting
+ 2045→## Overview
+ 2052→## Running the Example
+ 2063→## Rate Limiting Strategy
+ 2120→## How It Works
+ 2202→## Client-side Handling
+ 2255→## Token Estimation
+ 2294→## Streaming
+ 2298→# Streaming
+ 2313→## Streaming message deltas
+ 2330→## Retrieving streamed deltas
+ 2404→## Consuming the stream yourself with the Agent
+ 2433→## Advanced: Streaming deltas asynchronously without using an Agent
+ 2533→## Threads
+ 2537→# Threads
+ 2543→## Creating a thread
+ 2566→## Generating a message in a thread
+ 2585→## Continuing a thread using the `thread` object from `agent.continueThread`
+ 2605→## Deleting threads
+ 2627→## Getting all threads owned by a user
+ 2636→## Deleting all threads and messages associated with a user
+ 2652→## Getting messages in a thread
+ 2680→## Tools
+ 2684→# Tools
+ 2694→## Defining tools
+ 2706→## Using tools
+ 2712→## Creating a tool with a Convex context
+ 2788→## Using an LLM or Agent as a tool
+ 2846→## Usage Tracking
+ 2850→# Usage Tracking
+ 2875→## Storing usage in a table
+ 2956→## Generating invoices via a cron job
+ 2985→## Workflows
+ 2989→# Workflows
+ 3027→## Building reliable workflows
+ 3055→## Using the Workflow component for long-lived durable workflows
+ 3134→## Complex workflow patterns
+ 3168→## AI Code Generation
+ 3172→# AI Code Generation
+ 3174→## [Prompt to build an app with Convex Chef](https://chef.convex.dev)
+ 3185→## Convex AI rules
+ 3201→## Using Convex with Background Agents
+ 3221→## Convex MCP Server
+ 3228→## Convex MCP Server
+ 3232→# Convex MCP Server
+ 3236→## Setup
+ 3258→## Available Tools
+ 3300→## Using Cursor with Convex
+ 3304→# Using Cursor with Convex
+ 3308→## Add Convex `.cursor/rules`
+ 3318→## Setup the Convex MCP Server
+ 3353→## Tips and tricks
+ 3398→## Using GitHub Copilot with Convex
+ 3402→# Using GitHub Copilot with Convex
+ 3406→## Add Convex Instructions
+ 3418→## Setup the Convex MCP Server
+ 3455→## Using Windsurf with Convex
+ 3459→# Using Windsurf with Convex
+ 3463→## Add Convex Rules
+ 3471→## Setup the Convex MCP Server
+ 3503→## Convex
+ 3507→# Convex
+ 3521→# Structure
+ 3538→## Class: BaseConvexClient
+ 3542→# Class: BaseConvexClient
+ 3550→## Constructors
+ 3568→## Accessors
+ 3586→## Methods
+ 3912→## Class: ConvexClient
+ 3916→# Class: ConvexClient
+ 3931→## Constructors
+ 3950→## Accessors
+ 3994→## Methods
+ 4251→## Class: ConvexHttpClient
+ 4255→# Class: ConvexHttpClient
+ 4265→## Constructors
+ 4287→## Accessors
+ 4305→## Methods
+ 4504→## Class: ConvexReactClient
+ 4508→# Class: ConvexReactClient
+ 4516→## Constructors
+ 4533→## Accessors
+ 4569→## Methods
+ 4847→## Class: Crons
+ 4851→# Class: Crons
+ 4859→## Constructors
+ 4869→## Properties
+ 4889→## Methods
+ 5140→## Class: Expression<T>
+ 5144→# Class: Expression\<T>
+ 5152→## Type parameters
+ 5161→## Class: FilterExpression<T>
+ 5165→# Class: FilterExpression\<T>
+ 5173→## Type parameters
+ 5182→## Class: HttpRouter
+ 5186→# Class: HttpRouter
+ 5226→## Constructors
+ 5232→## Properties
+ 5262→## Methods
+ 5377→## Class: IndexRange
+ 5381→# Class: IndexRange
+ 5390→## Class: SchemaDefinition<Schema, StrictTableTypes>
+ 5394→# Class: SchemaDefinition\<Schema, StrictTableTypes>
+ 5402→## Type parameters
+ 5409→## Properties
+ 5442→## Class: SearchFilter
+ 5446→# Class: SearchFilter
+ 5452→## Hierarchy
+ 5461→## Class: TableDefinition<DocumentType, Indexes, SearchIndexes, VectorIndexes>
+ 5465→# Class: TableDefinition\<DocumentType, Indexes, SearchIndexes, VectorIndexes>
+ 5473→## Type parameters
+ 5482→## Properties
+ 5492→## Methods
+ 5788→## Class: ConvexError<TData>
+ 5792→# Class: ConvexError\<TData>
+ 5796→## Type parameters
+ 5802→## Hierarchy
+ 5808→## Constructors
+ 5834→## Properties
+ 5959→## Methods
+ 5989→## Class: VAny<Type, IsOptional, FieldPaths>
+ 5993→# Class: VAny\<Type, IsOptional, FieldPaths>
+ 5999→## Type parameters
+ 6007→## Hierarchy
+ 6013→## Constructors
+ 6042→## Properties
+ 6118→## Accessors
+ 6143→## Class: VArray<Type, Element, IsOptional>
+ 6147→# Class: VArray\<Type, Element, IsOptional>
+ 6153→## Type parameters
+ 6161→## Hierarchy
+ 6167→## Constructors
+ 6199→## Properties
+ 6287→## Accessors
+ 6312→## Class: VBoolean<Type, IsOptional>
+ 6316→# Class: VBoolean\<Type, IsOptional>
+ 6322→## Type parameters
+ 6329→## Hierarchy
+ 6335→## Constructors
+ 6363→## Properties
+ 6439→## Accessors
+ 6464→## Class: VBytes<Type, IsOptional>
+ 6468→# Class: VBytes\<Type, IsOptional>
+ 6474→## Type parameters
+ 6481→## Hierarchy
+ 6487→## Constructors
+ 6515→## Properties
+ 6591→## Accessors
+ 6616→## Class: VFloat64<Type, IsOptional>
+ 6620→# Class: VFloat64\<Type, IsOptional>
+ 6626→## Type parameters
+ 6633→## Hierarchy
+ 6639→## Constructors
+ 6667→## Properties
+ 6743→## Accessors
+ 6768→## Class: VId<Type, IsOptional>
+ 6772→# Class: VId\<Type, IsOptional>
+ 6778→## Type parameters
+ 6785→## Hierarchy
+ 6791→## Constructors
+ 6822→## Properties
+ 6910→## Accessors
+ 6935→## Class: VInt64<Type, IsOptional>
+ 6939→# Class: VInt64\<Type, IsOptional>
+ 6945→## Type parameters
+ 6952→## Hierarchy
+ 6958→## Constructors
+ 6986→## Properties
+ 7062→## Accessors
+ 7087→## Class: VLiteral<Type, IsOptional>
+ 7091→# Class: VLiteral\<Type, IsOptional>
+ 7097→## Type parameters
+ 7104→## Hierarchy
+ 7110→## Constructors
+ 7141→## Properties
+ 7229→## Accessors
+ 7254→## Class: VNull<Type, IsOptional>
+ 7258→# Class: VNull\<Type, IsOptional>
+ 7264→## Type parameters
+ 7271→## Hierarchy
+ 7277→## Constructors
+ 7305→## Properties
+ 7381→## Accessors
+ 7406→## Class: VObject<Type, Fields, IsOptional, FieldPaths>
+ 7410→# Class: VObject\<Type, Fields, IsOptional, FieldPaths>
+ 7416→## Type parameters
+ 7425→## Hierarchy
+ 7431→## Constructors
+ 7464→## Properties
+ 7552→## Accessors
+ 7577→## Class: VRecord<Type, Key, Value, IsOptional, FieldPaths>
+ 7581→# Class: VRecord\<Type, Key, Value, IsOptional, FieldPaths>
+ 7587→## Type parameters
+ 7597→## Hierarchy
+ 7603→## Constructors
+ 7638→## Properties
+ 7738→## Accessors
+ 7763→## Class: VString<Type, IsOptional>
+ 7767→# Class: VString\<Type, IsOptional>
+ 7773→## Type parameters
+ 7780→## Hierarchy
+ 7786→## Constructors
+ 7814→## Properties
+ 7890→## Accessors
+ 7915→## Class: VUnion<Type, T, IsOptional, FieldPaths>
+ 7919→# Class: VUnion\<Type, T, IsOptional, FieldPaths>
+ 7925→## Type parameters
+ 7934→## Hierarchy
+ 7940→## Constructors
+ 7973→## Properties
+ 8061→## Accessors
+ 8086→## Interface: BaseConvexClientOptions
+ 8090→# Interface: BaseConvexClientOptions
+ 8096→## Hierarchy
+ 8102→## Properties
+ 8280→## Interface: MutationOptions
+ 8284→# Interface: MutationOptions
+ 8290→## Properties
+ 8307→## Interface: OptimisticLocalStore
+ 8311→# Interface: OptimisticLocalStore
+ 8317→## Methods
+ 8422→## Interface: SubscribeOptions
+ 8426→# Interface: SubscribeOptions
+ 8432→## Properties
+ 8449→## Interface: ConvexReactClientOptions
+ 8453→# Interface: ConvexReactClientOptions
+ 8459→## Hierarchy
+ 8465→## Properties
+ 8679→## Interface: MutationOptions<Args>
+ 8683→# Interface: MutationOptions\<Args>
+ 8689→## Type parameters
+ 8695→## Properties
+ 8712→## Interface: ReactAction<Action>
+ 8716→# Interface: ReactAction\<Action>
+ 8722→## Type parameters
+ 8728→## Callable
+ 8755→## Interface: ReactMutation<Mutation>
+ 8759→# Interface: ReactMutation\<Mutation>
+ 8765→## Type parameters
+ 8771→## Callable
+ 8795→## Methods
+ 8836→## Interface: Watch<T>
+ 8840→# Interface: Watch\<T>
+ 8846→## Type parameters
+ 8852→## Methods
+ 8939→## Interface: WatchQueryOptions
+ 8943→# Interface: WatchQueryOptions
+ 8949→## Properties
+ 8966→## Interface: Auth
+ 8970→# Interface: Auth
+ 8976→## Methods
+ 9000→## Interface: BaseTableReader<DataModel, TableName>
+ 9004→# Interface: BaseTableReader\<DataModel, TableName>
+ 9008→## Type parameters
+ 9015→## Hierarchy
+ 9021→## Methods
+ 9068→## Interface: BaseTableWriter<DataModel, TableName>
+ 9072→# Interface: BaseTableWriter\<DataModel, TableName>
+ 9076→## Type parameters
+ 9083→## Hierarchy
+ 9089→## Methods
+ 9238→## Interface: CronJob
+ 9242→# Interface: CronJob
+ 9248→## Properties
+ 9281→## Interface: DefineSchemaOptions<StrictTableNameTypes>
+ 9285→# Interface: DefineSchemaOptions\<StrictTableNameTypes>
+ 9291→## Type parameters
+ 9297→## Properties
+ 9343→## Interface: FilterBuilder<TableInfo>
+ 9347→# Interface: FilterBuilder\<TableInfo>
+ 9385→## Type parameters
+ 9391→## Methods
+ 9851→## Interface: GenericActionCtx<DataModel>
+ 9855→# Interface: GenericActionCtx\<DataModel>
+ 9865→## Type parameters
+ 9871→## Properties
+ 9907→## Methods
+10045→## Interface: GenericDatabaseReader<DataModel>
+10049→# Interface: GenericDatabaseReader\<DataModel>
+10062→## Type parameters
+10068→## Hierarchy
+10076→## Properties
+10093→## Methods
+10203→## Interface: GenericDatabaseReaderWithTable<DataModel>
+10207→# Interface: GenericDatabaseReaderWithTable\<DataModel>
+10211→## Type parameters
+10217→## Hierarchy
+10225→## Properties
+10242→## Methods
+10277→## Interface: GenericDatabaseWriter<DataModel>
+10281→# Interface: GenericDatabaseWriter\<DataModel>
+10291→## Type parameters
+10297→## Hierarchy
+10303→## Properties
+10324→## Methods
+10547→## Interface: GenericDatabaseWriterWithTable<DataModel>
+10551→# Interface: GenericDatabaseWriterWithTable\<DataModel>
+10561→## Type parameters
+10567→## Hierarchy
+10573→## Properties
+10594→## Methods
+10629→## Interface: GenericMutationCtx<DataModel>
+10633→# Interface: GenericMutationCtx\<DataModel>
+10643→## Type parameters
+10649→## Properties
+10772→## Interface: GenericQueryCtx<DataModel>
+10776→# Interface: GenericQueryCtx\<DataModel>
+10786→## Type parameters
+10792→## Properties
+10866→## Interface: IndexRangeBuilder<Document, IndexFields, FieldNum>
+10870→# Interface: IndexRangeBuilder\<Document, IndexFields, FieldNum>
+10901→## Type parameters
+10909→## Hierarchy
+10915→## Methods
+11049→## Interface: OrderedQuery<TableInfo>
+11053→# Interface: OrderedQuery\<TableInfo>
+11059→## Type parameters
+11065→## Hierarchy
+11073→## Methods
+11230→## Interface: PaginationOptions
+11234→# Interface: PaginationOptions
+11242→## Properties
+11273→## Interface: PaginationResult<T>
+11277→# Interface: PaginationResult\<T>
+11283→## Type parameters
+11289→## Properties
+11352→## Interface: Query<TableInfo>
+11356→# Interface: Query\<TableInfo>
+11391→## Type parameters
+11397→## Hierarchy
+11405→## Methods
+11610→## Interface: QueryInitializer<TableInfo>
+11614→# Interface: QueryInitializer\<TableInfo>
+11627→## Type parameters
+11633→## Hierarchy
+11639→## Methods
+11942→## Interface: Scheduler
+11946→# Interface: Scheduler
+11956→## Methods
+12041→## Interface: SearchFilterBuilder<Document, SearchIndexConfig>
+12045→# Interface: SearchFilterBuilder\<Document, SearchIndexConfig>
+12062→## Type parameters
+12069→## Methods
+12103→## Interface: SearchFilterFinalizer<Document, SearchIndexConfig>
+12107→# Interface: SearchFilterFinalizer\<Document, SearchIndexConfig>
+12115→## Type parameters
+12122→## Hierarchy
+12128→## Methods
+12160→## Interface: SearchIndexConfig<SearchField, FilterFields>
+12164→# Interface: SearchIndexConfig\<SearchField, FilterFields>
+12170→## Type parameters
+12177→## Properties
+12206→## Interface: StorageActionWriter
+12210→# Interface: StorageActionWriter
+12216→## Hierarchy
+12222→## Methods
+12521→## Interface: StorageReader
+12525→# Interface: StorageReader
+12531→## Hierarchy
+12537→## Methods
+12656→## Interface: StorageWriter
+12660→# Interface: StorageWriter
+12666→## Hierarchy
+12674→## Methods
+12885→## Interface: SystemDataModel
+12889→# Interface: SystemDataModel
+12897→## Hierarchy
+12903→## Properties
+12962→## Interface: UserIdentity
+12966→# Interface: UserIdentity
+12986→## Indexable
+12990→## Properties
+13239→## Interface: ValidatedFunction<Ctx, ArgsValidator, Returns>
+13243→# Interface: ValidatedFunction\<Ctx, ArgsValidator, Returns>
+13273→## Type parameters
+13281→## Properties
+13336→## Interface: VectorFilterBuilder<Document, VectorIndexConfig>
+13340→# Interface: VectorFilterBuilder\<Document, VectorIndexConfig>
+13348→## Type parameters
+13355→## Methods
+13409→## Interface: VectorIndexConfig<VectorField, FilterFields>
+13413→# Interface: VectorIndexConfig\<VectorField, FilterFields>
+13419→## Type parameters
+13426→## Properties
+13467→## Interface: VectorSearchQuery<TableInfo, IndexName>
+13471→# Interface: VectorSearchQuery\<TableInfo, IndexName>
+13477→## Type parameters
+13484→## Properties
+13547→## convex
+13551→# convex
+13553→## Modules
+13566→## Module: browser
+13570→# Module: browser
+13576→## Usage
+13587→## Classes
+13593→## Interfaces
+13600→## Type Aliases
+13778→## Module: nextjs
+13782→# Module: nextjs
+13791→## Usage
+13824→## Type Aliases
+13844→## Functions
+14001→## Module: react
+14005→# Module: react
+14016→## Usage
+14067→## Classes
+14071→## Interfaces
+14080→## References
+14086→## Type Aliases
+14285→## Functions
+14958→## Module: react-auth0
+14962→# Module: react-auth0
+14966→## Functions
+14997→## Module: react-clerk
+15001→# Module: react-clerk
+15005→## Functions
+15037→## Module: server
+15041→# Module: server
+15045→## Usage
+15089→## Classes
+15100→## Interfaces
+15135→## References
+15141→## Type Aliases
+16912→## Variables
+16962→## Functions
+17601→## Module: values
+17605→# Module: values
+17611→## Namespaces
+17615→## Classes
+17632→## Type Aliases
+17904→## Variables
+17941→## Functions
+18049→## Namespace: Base64
+18053→# Namespace: Base64
+18057→## Functions
+18140→## Authentication
+18144→# Authentication
+18150→## Third-party authentication platforms
+18161→## The Convex Auth Library
+18173→## Debugging
+18177→## Service Authentication
+18185→## Authorization
+18217→## Custom OIDC Provider
+18221→# Custom OIDC Provider
+18227→## Server-side integration
+18258→## Client-side integration
+18336→## Custom JWT Provider
+18340→# Custom JWT Provider
+18350→## Server-side integration
+18409→## Client-side integration
+18418→## Convex & Auth0
+18422→# Convex & Auth0
+18430→## Get started
+18517→## Login and logout flows
+18559→## Logged-in and logged-out views
+18601→## User information in React
+18618→## User information in functions
+18624→## Configuring dev and prod tenants
+18718→## Debugging authentication
+18726→## Under the hood
+18766→## Convex & WorkOS AuthKit
+18770→# Convex & WorkOS AuthKit
+18774→## Get started
+18820→## Client configuration
+19400→## Next steps
+19424→## Configuring dev and prod instances
+19519→## Debugging authentication
+19534→## Under the hood
+19574→## Automatic AuthKit Configuration
+19578→# Automatic AuthKit Configuration
+19584→## Creating WorkOS environments on-demand
+19614→## Convex & Clerk
+19618→# Convex & Clerk
+19622→## Get started
+20072→## Next steps
+20096→## Configuring dev and prod instances
+20173→## Debugging authentication
+20181→## Under the hood
+20221→## Convex Auth
+20225→# Convex Auth
+20237→## Get Started
+20251→## Overview
+20266→## Storing Users in the Convex Database
+20270→# Storing Users in the Convex Database
+20284→## Call a mutation from the client
+20511→## Set up webhooks
+20802→## Debugging Authentication
+20806→# Debugging Authentication
+20810→## Frequently encountered issues
+20825→## Step 1: Check whether authentication works on the backend
+20859→## Step 2: Check whether authentication works on the frontend
+20923→## Step 3: Check that backend configuration matches frontend configuration
+20988→## Auth in Functions
+20992→# Auth in Functions
+21019→## User identity fields
+21054→## HTTP Actions
+21081→## Chef
+21085→# Chef
+21091→## [Prompt to start an app with Convex Chef](https://chef.convex.dev)
+21095→## Deploying to production
+21166→## Integrations
+21199→## FAQs
+21225→## Limitations
+21232→## CLI
+21236→# CLI
+21252→## Configure
+21285→## Develop
+21394→## Deploy
+21494→## Agent Mode
+21498→# Agent Mode
+21521→## Deploy keys
+21525→# Deploy keys
+21558→# Common uses of deploy keys
+21594→## Rarer types of deploy keys
+21617→## Local Deployments for Development
+21621→# Local Deployments for Development
+21625→## Background on deployments in Convex
+21633→## Using local deployments
+21657→## Local deployments vs. production
+21675→## Limitations
+21698→## Android Kotlin
+21702→# Android Kotlin
+21713→## Installation
+21734→## Connecting to a backend
+21770→## Fetching data
+21816→## Editing data
+21833→## Calling third-party APIs
+21841→## Authentication with Auth0
+21849→## Production and dev deployments
+21879→## Structuring your application
+21891→## Testing
+21897→## Under the hood
+21908→## Kotlin and Convex type conversion
+21912→# Kotlin and Convex type conversion
+21914→## Custom data types
+21948→## Numerical types
+22003→## Field name conversion
+22017→## Convex JavaScript Clients
+22021→# Convex JavaScript Clients
+22027→## Convex Client
+22060→## HTTP client
+22084→## Using Convex without generated `convex/_generated/api.js`
+22116→## Bun
+22120→# Bun
+22146→## Using Convex with Bun without codegen
+22153→## Node.js
+22157→# Node.js
+22176→## TypeScript
+22182→## TypeScript without a compile step
+22186→## JavaScript with CommonJS (`require()` syntax)
+22206→## TypeScript with CommonJS without a compile step
+22210→## Using Convex with Node.js without codegen
+22217→## Script Tag
+22221→# Script Tag
+22297→## Next.js
+22301→# Next.js
+22313→## Getting started
+22317→## Calling Convex functions from client code
+22321→## [Convex React library documentation](/client/react.md)
+22323→## Server rendering (SSR)
+22331→## Adding authentication
+22404→## Next.js Server Rendering
+22408→# Next.js Server Rendering
+22422→## Preloading data for Client Components
+22478→## Using Convex to render Server Components
+22497→## Server Actions and Route Handlers
+22550→## Server-side authentication
+22606→## Configuring Convex deployment URL
+22615→## Consistency
+22624→## Next.js Pages Router
+22628→# Next.js Pages Router
+22632→## Getting started
+22636→## Adding client-side authentication
+22682→## API routes
+22706→## Server-side rendering
+22719→## Next.js Pages Quickstart
+22723→# Next.js Pages Quickstart
+22852→## OpenAPI & Other Languages
+22856→# OpenAPI & Other Languages
+22864→## Setup
+22898→## Example
+22969→## Limits
+22978→## Python
+22982→# Python
+22989→## Convex React
+22993→# Convex React
+23006→## Installation
+23014→## Connecting to a backend
+23038→## Fetching data
+23169→## Editing data
+23272→## Calling third-party APIs
+23304→## Under the hood
+23313→## Convex React Native
+23317→# Convex React Native
+23328→## Configuring Deployment URL
+23332→# Configuring Deployment URL
+23403→## Optimistic Updates
+23407→# Optimistic Updates
+23415→## Simple example
+23450→## Complex example
+23511→## Learning more
+23526→## Rust
+23530→# Rust
+23537→## Svelte
+23541→# Svelte
+23550→## iOS & macOS Swift
+23554→# iOS & macOS Swift
+23565→## Installation
+23587→## Connecting to a backend
+23599→## Fetching data
+23655→## Editing Data
+23684→## Calling third-party APIs
+23692→## Authentication with Auth0
+23700→## Production and dev deployments
+23725→## Structuring your application
+23762→## Under the hood
+23771→## Swift and Convex type conversion
+23775→# Swift and Convex type conversion
+23777→## Custom data types
+23815→## Numerical types
+23828→## Field name conversion
+23852→## Putting it all together
+23885→## Convex with TanStack Query
+23889→# Convex with TanStack Query
+23913→## Setup
+23959→## Queries
+23986→## Mutations
+24005→## Differences from using `fetch` with TanStack Query
+24016→## TanStack Start
+24020→# TanStack Start
+24040→## Getting started
+24044→## Using Convex with React Query
+24058→## Server-side Rendering
+24098→## Authentication
+24109→## TanStack Start with Clerk
+24113→# TanStack Start with Clerk
+24351→## Vue
+24355→# Vue
+24372→## Nuxt
+24376→# Nuxt
+24395→## Components
+24399→# Components
+24411→## [Full Components Directory](https://convex.dev/components)
+24413→## Durable Functions
+24415→## [Workflow](https://www.convex.dev/components/workflow)
+24419→## [Workpool](https://www.convex.dev/components/workpool)
+24423→## [Crons](https://www.convex.dev/components/crons)
+24427→## [Action Retrier](https://www.convex.dev/components/retrier)
+24431→## Database
+24433→## [Sharded Counter](https://www.convex.dev/components/sharded-counter)
+24437→## [Migrations](https://www.convex.dev/components/migrations)
+24441→## [Aggregate](https://www.convex.dev/components/aggregate)
+24445→## [Geospatial (Beta)](https://www.convex.dev/components/geospatial)
+24449→## Integrations
+24451→## [Cloudflare R2](https://www.convex.dev/components/cloudflare-r2)
+24455→## [Collaborative Text Editor Sync](https://www.convex.dev/components/prosemirror-sync)
+24459→## [Expo Push Notifications](https://www.convex.dev/components/push-notifications)
+24463→## [Twilio SMS](https://www.convex.dev/components/twilio)
+24467→## [LaunchDarkly Feature Flags](https://www.convex.dev/components/launchdarkly)
+24471→## [Polar](https://www.convex.dev/components/polar)
+24475→## Backend
+24477→## [AI Agent](https://www.convex.dev/components/agent)
+24481→## [Persistent Text Streaming](https://www.convex.dev/components/persistent-text-streaming)
+24485→## [Rate Limiter](https://www.convex.dev/components/rate-limiter)
+24489→## [Action Cache](https://www.convex.dev/components/action-cache)
+24497→## Understanding Components
+24531→## Using Components
+24535→# Using Components
+24543→## Installing Components
+24584→## Component functions
+24590→## Transactions
+24609→## Dashboard
+24618→## Dashboard
+24622→# Dashboard
+24631→## Deployments
+24635→# Deployments
+24646→## Data
+24650→# Data
+24666→## Filtering documents
+24682→## Writing custom queries
+24696→## Creating tables
+24700→## Creating documents
+24708→## Quick actions (context menu)
+24714→## Editing a cell
+24726→## Editing a document
+24732→## Adding references to other documents
+24738→## Bulk editing documents
+24746→## Deleting documents
+24750→## Clear a table
+24756→## Delete a table
+24764→## Generating a schema
+24770→## View the schema of a table
+24776→## View the indexes of a table
+24787→## Settings
+24791→# Settings
+24795→## URL and Deploy Key
+24805→## Environment Variables
+24811→## Authentication
+24815→## Backup & Restore
+24821→## Integrations
+24825→## Pause Deployment
+24834→## File Storage
+24838→# File Storage
+24853→## Functions
+24857→# Functions
+24865→## Running functions
+24930→## Metrics
+24963→## Health
+24967→# Health
+24971→## Failure Rate
+24977→## Cache Hit Rate
+24985→## Scheduler Status
+24995→## Last Deployed
+25001→## Integrations
+25011→## Insights
+25032→## History
+25036→# History
+25051→## Logs
+25055→# Logs
+25103→## Schedules
+25107→# Schedules
+25111→## Scheduled functions UI
+25117→## Cron jobs UI
+25130→## Projects
+25134→# Projects
+25142→## Creating a project
+25146→## Project Settings
+25165→## Deleting projects
+25176→## Teams
+25180→# Teams
+25188→## General
+25196→## Team Members
+25243→## Billing
+25264→## Usage
+25276→## Audit Log
+25291→## Database
+25295→# Database
+25311→## Tables
+25325→## Documents
+25339→## Schemas
+25360→## [Next: Reading Data](/database/reading-data.md)
+25373→## OCC and Atomicity
+25377→# OCC and Atomicity
+25381→## Convex Financial, Inc.
+25449→## When OCC loses, determinism wins
+25461→## Snapshot Isolation vs Serializability
+25465→## No need to think about this
+25474→## Schema Philosophy
+25478→# Schema Philosophy
+25495→## System Tables
+25499→# System Tables
+25511→## Backups
+25519→# Backups
+25556→# Downloading a backup
+25576→## FAQ
+25599→## Document IDs
+25603→# Document IDs
+25641→## References and relationships
+25669→## Trading off deeply nested documents vs. relationships
+25675→## Serializing IDs
+25725→## Data Import & Export
+25729→# Data Import & Export
+25749→## Data Export
+25753→# Data Export
+25766→## Data Import
+25770→# Data Import
+25784→## Single table import
+25802→## Restore data from a backup ZIP file
+25812→## Use cases
+25846→## Features
+25868→## Warnings
+25886→## Paginated Queries
+25890→# Paginated Queries
+25905→## Writing paginated query functions
+25992→## Paginating within React Components
+26077→## Paginating manually
+26121→## Reading Data
+26125→# Reading Data
+26129→## Reading a single document
+26152→## Querying documents
+26179→## Filtering your query
+26227→## Ordering
+26274→## Retrieving results
+26313→## More complex queries
+26397→## Explore the syntax on the dashboard
+26404→## Filtering
+26408→# Filtering
+26512→## Advanced filtering techniques
+26556→## Querying performance and limits
+26586→## Indexes
+26590→# Indexes
+26596→## Defining indexes
+26641→## Querying documents using indexes
+26747→## Sorting with indexes
+26806→## Staged indexes
+26834→## Limits
+26845→## Introduction to Indexes and Query Performance
+26849→# Introduction to Indexes and Query Performance
+26860→## A Library of Documents
+26882→## Full Table Scans
+26903→## Card Catalogs
+26927→## Indexes
+26964→## Backfilling and Maintaining Indexes
+26974→## Indexing Multiple Fields
+27061→## Conclusions
+27080→## Schemas
+27084→# Schemas
+27097→## Writing schemas
+27316→## Schema validation
+27390→## TypeScript types
+27423→## Data Types
+27427→# Data Types
+27433→## Convex values
+27450→## System fields
+27457→## Limits
+27467→## Working with `undefined`
+27504→## Working with dates and times
+27518→## Writing Data
+27522→# Writing Data
+27526→## Inserting new documents
+27553→## Updating existing documents
+27612→## Deleting documents
+27632→## Bulk inserts or updates
+27681→## Migrations
+27691→## Write performance and limits
+27698→## Deployment API
+27702→# Deployment API
+27717→## Convex Deployment API
+27723→# Convex Deployment API
+27727→## Authentication
+27763→## Get canonical URLs
+27767→# Get canonical URLs
+27776→## Responses
+27783→## List environment variables
+27787→# List environment variables
+27796→## Responses
+27803→## Update canonical URL
+27807→# Update canonical URL
+27816→## Request
+27818→## Responses
+27825→## Update environment variables
+27829→# Update environment variables
+27838→## Request
+27840→## Responses
+27847→## Deployment Platform API
+27851→# Deployment Platform API
+27859→## Authorization
+27885→## Errors and Warnings
+27889→# Errors and Warnings
+27895→## Write conflict: Optimistic concurrency control
+27968→## ESLint rules
+27972→# ESLint rules
+27980→## Setup
+28022→## Rules
+28148→## File Storage
+28152→# File Storage
+28169→## Deleting Files
+28173→# Deleting Files
+28201→## Accessing File Metadata
+28205→# Accessing File Metadata
+28254→## Accessing metadata from actions (deprecated)
+28279→## Serving Files
+28283→# Serving Files
+28287→## Generating file URLs in queries
+28331→## Serving files from HTTP actions
+28390→## Storing Generated Files
+28394→# Storing Generated Files
+28402→## Storing files in actions
+28460→## Uploading and Storing Files
+28464→# Uploading and Storing Files
+28468→## Uploading files via upload URLs
+28587→## Uploading files via an HTTP action
+28734→## Functions
+28738→# Functions
+28763→## Actions
+28767→# Actions
+28773→## Action names
+28777→## The `action` constructor
+28975→## Choosing the runtime ("use node")
+29021→## Splitting up action code via helpers
+29031→## Calling actions from clients
+29088→## Limits
+29096→## Error handling
+29100→## Dangling promises
+29104→## Best practices
+29132→## Bundling
+29136→# Bundling
+29142→## Bundling for Convex
+29162→## Bundling limitations
+29215→## External packages
+29291→## Debugging
+29295→# Debugging
+29299→## Debugging during development
+29356→## Debugging in production
+29365→## Finding relevant logs by Request ID
+29374→## Error Handling
+29378→# Error Handling
+29397→## Errors in queries
+29423→## Errors in mutations
+29456→## Errors in action functions
+29460→## Differences in error reporting between dev and prod
+29468→## Application errors, expected failures
+29474→## Read/write limit errors
+29498→## Debugging Errors
+29505→## Application Errors
+29509→# Application Errors
+29513→## Returning different values
+29527→## Throwing application errors
+29583→## Handling application errors on the client
+29622→## HTTP Actions
+29626→# HTTP Actions
+29656→## Defining HTTP actions
+29748→## Limits
+29760→## Debugging
+29794→## Common patterns
+29904→## Internal Functions
+29908→# Internal Functions
+29916→## Use cases for internal functions
+29927→## Defining internal functions
+29966→## Calling internal functions
+30005→## Mutations
+30009→# Mutations
+30035→## Mutation names
+30041→## The `mutation` constructor
+30160→## Splitting up mutation code via helpers
+30195→## Using NPM packages
+30220→## Calling mutations from clients
+30246→## Transactions
+30255→## Limits
+30264→## Queries
+30268→# Queries
+30298→## Query names
+30350→## The `query` constructor
+30462→## Splitting up query code via helpers
+30502→## Using NPM packages
+30527→## Calling queries from clients
+30547→## Caching & reactivity & consistency
+30563→## Limits
+30572→## Runtimes
+30576→# Runtimes
+30583→## Default Convex runtime
+30667→## Node.js runtime
+30694→## Argument and Return Value Validation
+30698→# Argument and Return Value Validation
+30706→## Adding validators
+30739→## Supported types
+30877→## Extracting TypeScript types
+30905→## Generated Code
+30909→# Generated Code
+30930→## api.js
+30934→# api.js
+30988→## dataModel.d.ts
+30992→# dataModel.d.ts
+31002→## Types
+31059→## server.js
+31063→# server.js
+31073→## Functions
+31233→## Types
+31319→## Convex HTTP API
+31323→# Convex HTTP API
+31327→## Convex value format
+31331→## API authentication
+31337→## Functions API
+31469→## Management API
+31473→# Management API
+31481→## Authorization
+31500→## Required Parameters
+31510→## Responses
+31514→## Endpoints
+31521→## Convex Management API
+31527→# Convex Management API
+31531→## Authentication
+31560→## Create custom domain
+31564→# Create custom domain
+31573→## Request
+31575→## Responses
+31582→## Create deploy key
+31586→# Create deploy key
+31599→## Request
+31601→## Responses
+31608→## Create project
+31612→# Create project
+31621→## Request
+31623→## Responses
+31630→## Delete custom domain
+31634→# Delete custom domain
+31643→## Request
+31645→## Responses
+31652→## Delete project
+31656→# Delete project
+31665→## Request
+31667→## Responses
+31674→## Get token details
+31678→# Get token details
+31687→## Responses
+31694→## List custom domains
+31698→# List custom domains
+31707→## Request
+31709→## Responses
+31716→## List deployments
+31720→# List deployments
+31729→## Request
+31731→## Responses
+31738→## List projects
+31742→# List projects
+31751→## Request
+31753→## Responses
+31760→## Platform APIs
+31764→# Platform APIs
+31774→## Managing your own projects
+31788→## Managing your users' projects
+31796→## APIs to manage projects
+31802→## Pushing code to a deployment
+31827→## Embedding the dashboard
+31831→# Embedding the dashboard
+31901→## OAuth Applications
+31905→# OAuth Applications
+31920→## Creating an application
+31940→## Implementing OAuth
+31955→## Step 1: Redirect the user to Convex's authorization endpoint
+31976→## Step 2: Receive the callback
+31984→## Step 3: Exchange the authorization code for a project token
+32013→# Using PKCE (RFC 7636)
+32027→## Deploying Your App to Production
+32031→# Deploying Your App to Production
+32035→## Project management
+32045→## Deploying to production
+32051→## Staging environment
+32055→## Typical team development workflow
+32115→## Contact Us
+32119→# Contact Us
+32123→## Feedback and Support
+32129→## Following Convex
+32135→## Vulnerability Disclosure
+32142→## Environment Variables
+32146→# Environment Variables
+32150→## Setting environment variables
+32173→## Accessing environment variables
+32197→## System environment variables
+32204→## Project environment variable defaults
+32217→## Hosting and Deployment
+32221→# Hosting and Deployment
+32240→## Custom Domains & Hosting
+32244→# Custom Domains & Hosting
+32246→## Custom Domains
+32283→## Custom Hosting
+32360→## Using Convex with Netlify
+32364→# Using Convex with Netlify
+32368→## Deploying to Netlify
+32428→## Authentication
+32432→## Deploy Previews
+32485→## Preview Deployments
+32489→# Preview Deployments
+32503→## Setup
+32509→## Limits
+32526→## Using Convex with Vercel
+32530→# Using Convex with Vercel
+32534→## Deploying to Vercel
+32596→## Preview Deployments
+32649→## Integrations
+32653→# Integrations
+32660→## Configuring an Integration
+32666→## Deleting an Integration
+32670→## Feedback
+32677→## Exception Reporting
+32681→# Exception Reporting
+32687→## Configuring Sentry
+32697→## Supported Tags
+32709→## Sentry Notes
+32715→## Configuring Datadog Error Tracking
+32722→## Log Streams
+32726→# Log Streams
+32738→## Configuring log streams
+32774→## Log event schema
+32946→## Guarantees
+32961→## (Legacy) Event schema
+32965→# (Legacy) Event schema
+32971→## Updating to the new format
+32996→## (Legacy) Event schema
+33000→## System fields
+33009→## Log sources
+33122→## Streaming Data in and out of Convex
+33126→# Streaming Data in and out of Convex
+33138→## Streaming Export
+33158→## Streaming Import
+33176→## Multiple Repositories
+33180→# Multiple Repositories
+33204→## Example
+33288→## Limits
+33296→## Pausing a Deployment
+33300→# Pausing a Deployment
+33322→## Project Configuration
+33326→# Project Configuration
+33328→## Local development
+33335→## Production deployment
+33343→## `convex.json`
+33431→## Status and Guarantees
+33435→# Status and Guarantees
+33439→## Guarantees
+33449→## Limits
+33453→## Beta Features
+33457→## Future Features
+33486→## Limits
+33490→# Limits
+33498→## Team
+33505→## Database
+33520→## Documents
+33538→## Functions
+33551→## Concurrent Function Executions
+33566→## Execution time and scheduling
+33577→## Transactions
+33589→## Environment Variables
+33599→## File Storage
+33606→## Full text search
+33617→## Vector search
+33637→## Convex Public HTTP routes
+33643→# Convex Public HTTP routes
+33652→## Execute action
+33656→# Execute action
+33665→## Request
+33667→## Responses
+33674→## Execute any function
+33678→# Execute any function
+33687→## Request
+33689→## Responses
+33696→## Execute function by URL path
+33700→# Execute function by URL path
+33709→## Request
+33711→## Responses
+33718→## Get latest timestamp
+33722→# Get latest timestamp
+33731→## Responses
+33738→## Execute mutation
+33742→# Execute mutation
+33751→## Request
+33753→## Responses
+33760→## Execute query at timestamp
+33764→# Execute query at timestamp
+33773→## Request
+33775→## Responses
+33782→## Execute query batch
+33786→# Execute query batch
+33795→## Request
+33797→## Responses
+33804→## Execute query (GET)
+33808→# Execute query (GET)
+33817→## Request
+33819→## Responses
+33826→## Execute query (POST)
+33830→# Execute query (POST)
+33839→## Request
+33841→## Responses
+33848→## Android Kotlin Quickstart
+33852→# Android Kotlin Quickstart
+34050→## Using Convex with Bun
+34058→# Using Convex with Bun
+34159→## Next.js Quickstart
+34163→# Next.js Quickstart
+34365→## Node.js Quickstart
+34369→# Node.js Quickstart
+34472→## Nuxt Quickstart
+34476→# Nuxt Quickstart
+34659→## Python Quickstart
+34663→# Python Quickstart
+34772→## React Quickstart
+34776→# React Quickstart
+34949→## React Native Quickstart
+34953→# React Native Quickstart
+35097→## Remix Quickstart
+35101→# Remix Quickstart
+35264→## Rust Quickstart
+35268→# Rust Quickstart
+35379→## Script Tag Quickstart
+35383→# Script Tag Quickstart
+35481→## Svelte Quickstart
+35485→# Svelte Quickstart
+35638→## iOS Swift Quickstart
+35642→# iOS Swift Quickstart
+35794→## TanStack Start Quickstart
+35798→# TanStack Start Quickstart
+36034→## Vue Quickstart
+36038→# Vue Quickstart
+36173→## Realtime
+36177→# Realtime
+36185→## Automatic caching
+36191→## Consistent data across your app
+36197→## Learn more
+36210→## Scheduling
+36214→# Scheduling
+36221→## Durable function components
+36258→## Cron Jobs
+36262→# Cron Jobs
+36268→## Defining your cron jobs
+36312→## Supported schedules
+36318→## Viewing your cron jobs
+36322→## Error handling
+36331→## Scheduled Functions
+36335→# Scheduled Functions
+36343→## Scheduling functions
+36398→## Retrieving scheduled function status
+36460→## Canceling scheduled functions
+36484→## Debugging
+36488→## Error handling
+36494→## Auth
+36501→## AI & Search
+36505→# AI & Search
+36524→## Full Text Search
+36528→# Full Text Search
+36545→## Defining search indexes
+36590→## Running search queries
+36663→## Search Behavior
+36686→## Limits
+36711→## Vector Search
+36715→# Vector Search
+36730→## Defining vector indexes
+36767→## Running vector searches
+36935→## Advanced patterns
+37006→## Limits
+37032→## Future development
+37045→## Self Hosting
+37049→# Self Hosting
+37055→## [Self-hosting guide](https://github.com/get-convex/convex-backend/blob/main/self-hosted/README.md)
+37061→## Open Source Convex Backend
+37067→## Other Convex Open Source Projects
+37092→## Streaming Export
+37096→# Streaming Export
+37198→## Streaming Import
+37202→# Streaming Import
+37300→## Testing
+37304→# Testing
+37308→## Automated tests
+37326→## Manual tests
+37346→## Continuous Integration
+37350→# Continuous Integration
+37354→## Testing in GitHub Actions
+37380→## Testing Local Backend
+37384→# Testing Local Backend
+37388→## Getting Started
+37399→## Limitations
+37413→## CI
+37420→## convex-test
+37424→# convex-test
+37430→## Get Started
+37512→## `convexTest`
+37537→## Calling functions with `t.query`, `t.mutation` and `t.action`
+37561→## Setting up and inspecting data and storage with `t.run`
+37583→## Testing HTTP actions with `t.fetch`
+37603→## Testing scheduled functions
+37692→## Testing authentication with `t.withIdentity`
+37721→## Mocking `fetch` calls
+37750→## Asserting results
+37778→## Measuring test coverage
+37790→## Debugging tests
+37798→## Multiple environments
+37822→## Custom `convex/` folder name or location
+37857→## Limitations
+37881→## CI
+37888→## Convex Tutorial: A chat app
+37892→# Convex Tutorial: A chat app
+37902→## Start developing with Convex
+37936→## How Convex works
+37952→## Your first `mutation`
+38044→## Your first `query`
+38105→## What you built
+38115→## Next up
+38121→## [Calling external services](/tutorial/actions.md)
+38128→## Convex Tutorial: Calling external services
+38132→# Convex Tutorial: Calling external services
+38146→## Your first `action`
+38188→## Hooking it up to your app
+38257→## The scheduler, actions, and the sync engine
+38271→## What you built
+38277→## Next up
+38283→## [Scaling your app](/tutorial/scale.md)
+38290→## Convex Tutorial: Scaling your app
+38294→# Convex Tutorial: Scaling your app
+38302→## Indexed queries
+38308→## Too many writes on the same document
+38316→## Scaling best practices with Convex Components
+38324→## [Components directory](https://www.convex.dev/components)
+38326→## Wrap up
+38337→## Convex Overview
+38341→# Convex Overview
+38351→## Database
+38365→## Server functions
+38409→## Client libraries
+38432→## Putting it all together
+38479→## Beyond reactivity
+38497→## For human and AI generated code
+38508→## Learn more
+38517→## Best Practices
+38521→# Best Practices
+38525→## Await all Promises
+38535→## Avoid `.filter` on database queries
+38580→## Only use `.collect` with a small number of results
+38670→## Check for redundant indexes
+38719→## Use argument validators for all public functions
+38759→## Use some form of access control for all public functions
+38879→## Only schedule and `ctx.run*` internal functions
+38961→## Use helper functions to write shared code
+39148→## Use `runAction` only when using a different runtime
+39221→## Avoid sequential `ctx.runMutation` / `ctx.runQuery` calls from actions
+39345→## Use `ctx.runQuery` and `ctx.runMutation` sparingly in queries and mutations
+39389→## TypeScript
+39393→# TypeScript
+39401→## Writing Convex functions in TypeScript
+39451→## Adding a schema
+39471→## Type annotating server-side helpers
+39549→## Writing frontend code in TypeScript
+39603→## Turning `string`s into valid document IDs
+39607→## Required TypeScript version
+39620→## Dev workflow
+39624→# Dev workflow
+39630→## Installing and running Convex
+39668→## Running the dev loop
+39724→## Convex dashboard
+39746→## Deploying your app
+39770→## Up next
+39779→## The Zen of Convex
+39783→# The Zen of Convex
+39789→## Performance<!-- -->
+39819→## Architecture<!-- -->
+39845→## Development workflow<!-- -->

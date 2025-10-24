@@ -1,0 +1,16 @@
+---
+source: src/toc.rs
+expression: toc.unwrap_or_default()
+---
+   4→# Getting Started
+   6→## Overview
+  20→## Browser Support
+  26→## Trying Vite Online
+  43→## Scaffolding Your First Vite Project
+ 110→## Community Templates
+ 126→## Manual Installation
+ 188→## `index.html` and Project Root
+ 198→#### Specifying Alternative Root
+ 203→## Command Line Interface
+ 221→## Using Unreleased Commits
+ 264→## Community
