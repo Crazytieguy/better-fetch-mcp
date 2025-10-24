@@ -25,11 +25,16 @@ impl Default for TocConfig {
     }
 }
 
-/// Heading extracted from markdown with line number and original text.
+/// Heading extracted from markdown.
+///
+/// Preserves original text except empty anchor links and setext underlines.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Heading {
+    /// Heading level from 1 (H1) to 6 (H6)
     pub level: u8,
+    /// Line number where heading appears (1-indexed)
     pub line_number: usize,
+    /// Heading text with formatting preserved
     pub text: String,
 }
 
@@ -154,8 +159,23 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
                         text.push_str(slice);
                     }
 
-                    // Collapse consecutive spaces but preserve newlines (for setext headings)
+                    // Strip setext underlines (lines of = or - following the title)
                     let text = text.trim();
+                    let text = if let Some(newline_pos) = text.rfind('\n') {
+                        let after_newline = &text[newline_pos + 1..];
+                        // Check if line after newline is all = or - (setext underline)
+                        if !after_newline.is_empty()
+                            && after_newline.chars().all(|c| c == '=' || c == '-')
+                        {
+                            &text[..newline_pos]
+                        } else {
+                            text
+                        }
+                    } else {
+                        text
+                    };
+
+                    // Collapse consecutive spaces
                     let mut result = String::with_capacity(text.len());
                     let mut last_was_space = false;
                     for c in text.chars() {
@@ -169,7 +189,7 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
                             last_was_space = false;
                         }
                     }
-                    let text = result;
+                    let text = result.trim().to_string();
 
                     // Filter out headings that are only hashes/whitespace after empty link removal
                     let has_content = text.chars().any(|c| !c.is_whitespace() && c != '#');
@@ -652,7 +672,7 @@ mod tests {
 
         #[test]
         fn snapshot_small_budget_react() {
-            // With a small budget (1500 bytes), should only include H1s
+            // React doc is small - H3 ToC fits in 1500 bytes (same as default)
             let md = include_str!("../test-fixtures/react-learn.txt");
             let config = TocConfig {
                 toc_budget: 1500,
@@ -664,7 +684,7 @@ mod tests {
 
         #[test]
         fn snapshot_large_budget_react() {
-            // With a large budget (10000 bytes), should include deeper levels
+            // React doc is small - even large budget produces same H3 ToC
             let md = include_str!("../test-fixtures/react-learn.txt");
             let config = TocConfig {
                 toc_budget: 10000,
