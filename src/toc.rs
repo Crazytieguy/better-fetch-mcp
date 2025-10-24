@@ -162,7 +162,7 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
                     // Strip setext underlines (lines of = or - following the title)
                     let text = text.trim();
                     let text = if let Some(newline_pos) = text.rfind('\n') {
-                        let after_newline = &text[newline_pos + 1..];
+                        let after_newline = text[newline_pos + 1..].trim();
                         // Check if line after newline is all = or - (setext underline)
                         if !after_newline.is_empty()
                             && after_newline.chars().all(|c| c == '=' || c == '-')

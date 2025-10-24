@@ -3,15 +3,10 @@ source: src/toc.rs
 expression: toc.unwrap_or_default()
 ---
   5→[Using Vite](https://tailwindcss.com/docs/installation/using-vite)
- ----------
   8→[Using PostCSS](https://tailwindcss.com/docs/installation/using-postcss)
- ----------
  11→[Tailwind CLI](https://tailwindcss.com/docs/installation/tailwind-cli)
- ----------
  14→[Framework Guides](https://tailwindcss.com/docs/installation/framework-guides)
- ----------
  17→[Play CDN](https://tailwindcss.com/docs/installation/play-cdn)
- ----------
  20→### Installing Tailwind CSS as a Vite plugin ###
  26→#### Create your project ####
  38→#### Install Tailwind CSS ####
