@@ -1,49 +1,18 @@
 //! Table of Contents generation for markdown documents.
 //!
-//! This module extracts headings from markdown and generates compact table of contents
-//! summaries for navigation. Headings are preserved exactly as they appear in the source,
-//! including all markdown syntax (links, formatting, trailing hashes, etc), except for
-//! empty anchor links which are automatically removed.
-//!
-//! # Design Philosophy
-//!
-//! Preserve exact source content rather than reconstructing cleaned text.
-//! This maintains fidelity to the original document and avoids complex event handling.
-//!
-//! # Example
-//!
-//! ```
-//! use llms_fetch_mcp::toc::{generate_toc, TocConfig};
-//!
-//! let markdown = "# Title\n\n## Section\n\nContent here.";
-//! let config = TocConfig::default();
-//! let toc = generate_toc(markdown, markdown.len(), &config);
-//! ```
+//! Extracts headings with line numbers, preserving original markdown syntax except
+//! empty anchor links. Adaptively selects heading depth to fit within budget.
 
 use pulldown_cmark::{Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 
-/// Default maximum size of generated `ToC` in bytes
 pub const DEFAULT_TOC_BUDGET: usize = 4000;
-
-/// Default minimum document size to generate `ToC`
 pub const DEFAULT_TOC_THRESHOLD: usize = 8000;
 
-/// Configuration for table of contents generation.
-///
-/// Both `toc_budget` and `full_content_threshold` are measured in bytes.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TocConfig {
-    /// Maximum size of the generated `ToC` in bytes (default: 4000).
-    ///
-    /// The algorithm selects the deepest heading level that fits within this budget.
-    /// For example, if H1-H3 headings exceed the budget but H1-H2 fit, only H1-H2
-    /// headings will be included.
+    /// Maximum `ToC` size in bytes. Algorithm selects deepest heading level that fits.
     pub toc_budget: usize,
-
-    /// Minimum document size in bytes to generate a `ToC` (default: 8000).
-    ///
-    /// Documents smaller than this threshold return `None` - the full content is
-    /// already small enough that a `ToC` isn't useful.
+    /// Minimum document size to generate `ToC`. Smaller docs return `None`.
     pub full_content_threshold: usize,
 }
 
@@ -56,25 +25,11 @@ impl Default for TocConfig {
     }
 }
 
-/// A heading extracted from markdown.
-///
-/// Preserves the original heading text exactly as it appears in the source,
-/// including hash marks, formatting, and any markdown syntax, except empty
-/// anchor links (like `[](#anchor)` or `[​](#anchor)`) which are removed.
+/// Heading extracted from markdown with line number and original text.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Heading {
-    /// Heading level from 1 (H1) to 6 (H6).
     pub level: u8,
-
-    /// Line number where this heading appears in the source (1-indexed).
     pub line_number: usize,
-
-    /// Full heading text including hash marks and any formatting.
-    ///
-    /// Examples:
-    /// - `"# Main Title"`
-    /// - `"## Section [link](url)"`
-    /// - `"### Code with backticks"`
     pub text: String,
 }
 
@@ -94,17 +49,8 @@ fn is_empty_or_invisible(text: &str) -> bool {
     })
 }
 
-/// Extracts heading information from markdown.
-///
-/// Uses pulldown-cmark events and their byte offsets to extract heading text,
-/// automatically excluding empty anchor links (links with no text like `[](#anchor)`).
-///
-/// Streams through events with a state machine:
-/// - Track when we enter/exit a heading
-/// - Track when we enter/exit a link within a heading
-/// - Record which links are empty (no Text/Code events inside them)
-/// - Extract full heading text, excluding byte ranges of empty links
-#[allow(clippy::too_many_lines)] // Complex but cohesive state machine
+/// Extracts headings with line numbers, filtering out empty anchor links.
+#[allow(clippy::too_many_lines)]
 fn extract_headings(markdown: &str) -> Vec<Heading> {
     use std::ops::Range;
 
@@ -124,15 +70,12 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
     let mut headings = Vec::new();
     let mut current_heading: Option<HeadingState> = None;
 
-    // Track line number incrementally to avoid O(n*h) rescanning where:
-    // n = document size in bytes, h = number of headings
-    // Without incremental tracking, we'd rescan from doc start for each heading
+    // Track line number incrementally to avoid O(n*h) rescanning
     let mut current_line = 1;
     let mut last_pos = 0;
 
     for (event, range) in Parser::new_ext(markdown, Options::all()).into_offset_iter() {
-        // Update line number based on newlines since last position
-        // Handle overlapping/backward ranges by only advancing forward
+        // Update line number, handling overlapping/backward ranges
         if range.start > last_pos {
             current_line += markdown[last_pos..range.start]
                 .chars()
@@ -185,42 +128,48 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
                     // Extract full heading text
                     let full_text = markdown.get(heading.start..range.end).unwrap_or("");
 
-                    // Build text excluding empty link ranges
-                    // Parser gives absolute byte offsets in the full markdown document.
-                    // We need to convert these to relative offsets within full_text (this heading).
+                    // Build text excluding empty link ranges (convert absolute→relative offsets)
                     let mut text = String::new();
                     let mut last_end = 0;
 
                     for empty_range in &heading.empty_link_ranges {
-                        // Convert absolute byte offsets to relative (from heading start)
                         let relative_start = empty_range.start.saturating_sub(heading.start);
                         let relative_end = empty_range.end.saturating_sub(heading.start);
 
-                        // Validate range to prevent invalid slicing
                         if relative_start >= relative_end || relative_end > full_text.len() {
                             continue;
                         }
 
-                        // Add text before this empty link (safe UTF-8 slicing)
                         if last_end < relative_start
                             && let Some(slice) = full_text.get(last_end..relative_start)
                         {
                             text.push_str(slice);
                         }
-                        // Skip the empty link itself, update position
                         last_end = relative_end;
                     }
 
-                    // Add remaining text after last empty link (safe UTF-8 slicing)
                     if last_end < full_text.len()
                         && let Some(slice) = full_text.get(last_end..)
                     {
                         text.push_str(slice);
                     }
 
-                    // Collapse multiple consecutive spaces left behind by empty link removal
+                    // Collapse consecutive spaces but preserve newlines (for setext headings)
                     let text = text.trim();
-                    let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
+                    let mut result = String::with_capacity(text.len());
+                    let mut last_was_space = false;
+                    for c in text.chars() {
+                        if c == ' ' {
+                            if !last_was_space {
+                                result.push(c);
+                                last_was_space = true;
+                            }
+                        } else {
+                            result.push(c);
+                            last_was_space = false;
+                        }
+                    }
+                    let text = result;
 
                     // Filter out headings that are only hashes/whitespace after empty link removal
                     let has_content = text.chars().any(|c| !c.is_whitespace() && c != '#');
@@ -250,10 +199,7 @@ fn extract_headings(markdown: &str) -> Vec<Heading> {
     headings
 }
 
-/// Find the optimal heading level that fits within budget and return both level and rendered `ToC`.
-///
-/// Returns the deepest heading level (highest number) where the rendered `ToC` fits within
-/// the budget, along with the rendered `ToC` string. This avoids rendering twice.
+/// Returns deepest heading level that fits within budget, with rendered `ToC`.
 fn find_optimal_level(headings: &[Heading], budget: usize) -> Option<(u8, String)> {
     if headings.is_empty() {
         return None;
@@ -272,8 +218,7 @@ fn find_optimal_level(headings: &[Heading], budget: usize) -> Option<(u8, String
         if byte_size <= budget {
             best = Some((level, rendered));
         }
-        // Note: Don't break early - ToC size may not increase monotonically
-        // (e.g., many H2s but few H3s could make level 3 smaller than level 2)
+        // Don't break early - size may not increase monotonically
     }
 
     best
@@ -291,7 +236,6 @@ fn render_toc(headings: &[Heading], max_level: u8) -> String {
     debug_assert!(!filtered.is_empty());
     let max_line_num = filtered.last().unwrap().line_number;
 
-    // Calculate width without allocating string
     #[allow(
         clippy::cast_precision_loss,
         clippy::cast_possible_truncation,
@@ -304,13 +248,10 @@ fn render_toc(headings: &[Heading], max_level: u8) -> String {
     } else if max_line_num < 10000 {
         5
     } else {
-        // For very large line numbers (>10k), use log10 to calculate digits
-        // Casts are safe: max_line_num is positive, result is always >= 0
         ((max_line_num as f64).log10().floor() as usize + 1).max(3)
     };
 
-    // Pre-allocate with estimated capacity to reduce reallocations
-    // Rough estimate: width + "→" (3 bytes) + average heading length (30) + newline per heading
+    // Pre-allocate to reduce reallocations
     let estimated_size = filtered.len() * (width + 34);
     let mut result = String::with_capacity(estimated_size);
 
@@ -318,47 +259,14 @@ fn render_toc(headings: &[Heading], max_level: u8) -> String {
         if i > 0 {
             result.push('\n');
         }
-        // Use write! to avoid intermediate allocations
         write!(result, "{:>width$}→{}", h.line_number, h.text).unwrap();
     }
 
     result
 }
 
-/// Generates a table of contents for markdown content.
-///
-/// Returns a formatted table of contents with line numbers and headings, or `None` if:
-/// - The document is too small (below `full_content_threshold`)
-/// - No headings are found
-/// - No heading level fits within the budget
-///
-/// # Arguments
-///
-/// * `markdown` - The markdown content to extract headings from
-/// * `total_bytes` - Total size of the content in bytes (used for threshold check)
-/// * `config` - Configuration controlling `ToC` generation behavior
-///
-/// # Returns
-///
-/// A formatted table of contents string with one heading per line, or `None` if no
-/// `ToC` should be generated. Each line has the format: `{line_number}→{heading_text}`
-///
-/// The algorithm adaptively selects the deepest heading level that fits within
-/// `config.toc_budget`. For example, if H1-H3 exceed the budget but H1-H2 fit,
-/// only H1-H2 headings are included.
-///
-/// # Example
-///
-/// ```
-/// use llms_fetch_mcp::toc::{generate_toc, TocConfig};
-///
-/// let markdown = "# Title\n\n## Section 1\n\n## Section 2";
-/// let config = TocConfig::default();
-///
-/// if let Some(toc) = generate_toc(markdown, markdown.len(), &config) {
-///     println!("Table of Contents:\n{}", toc);
-/// }
-/// ```
+/// Generates `ToC` with format `{line_number}→{heading_text}` per line.
+/// Returns `None` if document too small or no headings fit within budget.
 pub fn generate_toc(markdown: &str, total_bytes: usize, config: &TocConfig) -> Option<String> {
     if total_bytes < config.full_content_threshold {
         return None;
@@ -796,6 +704,42 @@ mod tests {
             let md = include_str!("../test-fixtures/convex-llms-full.txt");
             let config = TocConfig {
                 toc_budget: 50000,
+                full_content_threshold: 8000,
+            };
+            let toc = generate_toc(md, md.len(), &config);
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_very_tight_budget_python() {
+            // With a very tight budget (300 bytes), should fit only 2-3 headings
+            let md = include_str!("../test-fixtures/python-tutorial.txt");
+            let config = TocConfig {
+                toc_budget: 300,
+                full_content_threshold: 2000,
+            };
+            let toc = generate_toc(md, md.len(), &config);
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_minimal_threshold_convex() {
+            // With a minimal threshold (1000 bytes), small docs generate ToC
+            let md = include_str!("../test-fixtures/convex-excerpt.txt");
+            let config = TocConfig {
+                toc_budget: 4000,
+                full_content_threshold: 1000,
+            };
+            let toc = generate_toc(md, md.len(), &config);
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_deep_nesting_convex_full() {
+            // Convex full has H4/H5 nesting - test with budget allowing deeper levels
+            let md = include_str!("../test-fixtures/convex-llms-full.txt");
+            let config = TocConfig {
+                toc_budget: 100000,
                 full_content_threshold: 8000,
             };
             let toc = generate_toc(md, md.len(), &config);

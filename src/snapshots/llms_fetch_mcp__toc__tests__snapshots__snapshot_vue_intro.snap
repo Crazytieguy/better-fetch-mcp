@@ -2,13 +2,20 @@
 source: src/toc.rs
 expression: toc.unwrap_or_default()
 ---
-   1→Introduction ----------
-   9→What is Vue? ----------
-  68→The Progressive Framework ----------
-  86→Single-File Components ----------
- 136→API Styles ----------
+   1→Introduction 
+----------
+   9→What is Vue? 
+----------
+  68→The Progressive Framework 
+----------
+  86→Single-File Components 
+----------
+ 136→API Styles 
+----------
  141→### Options API ###
  182→### Composition API ###
  215→### Which to Choose? ###
- 237→Still Got Questions? ----------
- 242→Pick Your Learning Path ----------
+ 237→Still Got Questions? 
+----------
+ 242→Pick Your Learning Path 
+----------
