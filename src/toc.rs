@@ -665,6 +665,63 @@ mod tests {
             let toc = generate_toc(md, md.len(), &default_config());
             insta::assert_snapshot!(toc.unwrap_or_default());
         }
+
+        #[test]
+        fn snapshot_vite_guide() {
+            let md = include_str!("../test-fixtures/vite-guide.txt");
+            let toc = generate_toc(md, md.len(), &default_config());
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_nextjs_llms() {
+            let md = include_str!("../test-fixtures/nextjs-llms.txt");
+            let toc = generate_toc(md, md.len(), &default_config());
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_remix_quickstart() {
+            let md = include_str!("../test-fixtures/remix-quickstart.txt");
+            let toc = generate_toc(md, md.len(), &default_config());
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_go_tutorial() {
+            // Go tutorial is 6.3KB - use lower threshold
+            let md = include_str!("../test-fixtures/go-tutorial.txt");
+            let config = TocConfig {
+                toc_budget: 4000,
+                full_content_threshold: 2000,
+            };
+            let toc = generate_toc(md, md.len(), &config);
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_tailwind_install() {
+            // Tailwind install is 2.6KB - use lower threshold
+            let md = include_str!("../test-fixtures/tailwind-install.txt");
+            let config = TocConfig {
+                toc_budget: 4000,
+                full_content_threshold: 1000,
+            };
+            let toc = generate_toc(md, md.len(), &config);
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_solidjs_quickstart() {
+            // SolidJS quickstart is 1.9KB - use minimal threshold
+            let md = include_str!("../test-fixtures/solidjs-quickstart.txt");
+            let config = TocConfig {
+                toc_budget: 4000,
+                full_content_threshold: 500,
+            };
+            let toc = generate_toc(md, md.len(), &config);
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
     }
 
     mod config_snapshots {
