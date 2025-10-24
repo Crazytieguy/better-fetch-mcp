@@ -1,0 +1,24 @@
+---
+source: src/toc.rs
+expression: toc.unwrap_or_default()
+---
+  66→### Check it ###
+  77→### Interactive API docs ###
+  85→### Alternative API docs ###
+  93→### OpenAPI ###
+  97→#### "Schema" ####
+ 101→#### API "schema" ####
+ 107→#### Data "schema" ####
+ 113→#### OpenAPI and JSON Schema ####
+ 117→#### Check the `openapi.json` ####
+ 145→#### What is OpenAPI for ####
+ 153→Recap, step by step
+ 156→### Step 1: import `FastAPI` ###
+ 179→### Step 2: create a `FastAPI` "instance" ###
+ 198→### Step 3: create a *path operation* ###
+ 200→#### Path ####
+ 224→#### Operation ####
+ 259→#### Define a *path operation decorator* ####
+ 314→### Step 4: define the **path operation function** ###
+ 358→### Step 5: return the content ###
+ 379→Recap

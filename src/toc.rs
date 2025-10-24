@@ -499,68 +499,10 @@ mod tests {
     }
 
     #[test]
-    fn test_render_format() {
-        let headings = vec![
-            Heading {
-                level: 1,
-                line_number: 5,
-                text: "# Title".to_string(),
-            },
-            Heading {
-                level: 2,
-                line_number: 123,
-                text: "## Subtitle".to_string(),
-            },
-        ];
-        let toc = render_toc(&headings, 2);
-        assert!(toc.contains("  5→# Title"));
-        assert!(toc.contains("123→## Subtitle"));
-    }
-
-    #[test]
-    fn test_render_filters_by_level() {
-        let headings = vec![
-            Heading {
-                level: 1,
-                line_number: 1,
-                text: "# H1".to_string(),
-            },
-            Heading {
-                level: 2,
-                line_number: 2,
-                text: "## H2".to_string(),
-            },
-            Heading {
-                level: 3,
-                line_number: 3,
-                text: "### H3".to_string(),
-            },
-        ];
-        let toc = render_toc(&headings, 2);
-        assert!(toc.contains("# H1"));
-        assert!(toc.contains("## H2"));
-        assert!(!toc.contains("### H3"));
-    }
-
-    #[test]
     fn test_empty_headings() {
         let headings: Vec<Heading> = vec![];
         let toc = render_toc(&headings, 3);
         assert_eq!(toc, "");
-    }
-
-    #[test]
-    fn test_generate_toc_skips_small_docs() {
-        let small_md = "# Title\nSome content.";
-        let toc = generate_toc(small_md, small_md.len(), &default_config());
-        assert!(toc.is_none());
-    }
-
-    #[test]
-    fn test_generate_toc_returns_some_for_large_docs() {
-        let large_md = format!("# Title\n{}\n## Section", "content\n".repeat(1000));
-        let toc = generate_toc(&large_md, large_md.len(), &default_config());
-        assert!(toc.is_some());
     }
 
     #[test]
@@ -592,14 +534,6 @@ mod tests {
         );
         let toc = generate_toc(&md, md.len(), &default_config());
         assert!(toc.is_none());
-    }
-
-    #[test]
-    fn test_simple_toc_behavior() {
-        // Small doc should return None (< 2000 tokens)
-        let md = "# Introduction\n\nSome content here.\n\n## Getting Started\n\nMore content.\n\n### Installation\n\nInstall instructions.\n\n### Configuration\n\nConfig details.\n\n## Advanced Usage\n\nAdvanced stuff.";
-        let toc = generate_toc(md, md.len(), &default_config());
-        assert!(toc.is_none(), "Small documents should not generate ToC");
     }
 
     #[test]
@@ -718,6 +652,63 @@ mod tests {
             let config = TocConfig {
                 toc_budget: 4000,
                 full_content_threshold: 500,
+            };
+            let toc = generate_toc(md, md.len(), &config);
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_laravel_install() {
+            let md = include_str!("../test-fixtures/laravel-install.txt");
+            let toc = generate_toc(md, md.len(), &default_config());
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_qwik_getting_started() {
+            let md = include_str!("../test-fixtures/qwik-getting-started.txt");
+            let toc = generate_toc(md, md.len(), &default_config());
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_fastapi_tutorial() {
+            let md = include_str!("../test-fixtures/fastapi-tutorial.txt");
+            let toc = generate_toc(md, md.len(), &default_config());
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_angular_install() {
+            // Angular install is 3.8KB - use lower threshold
+            let md = include_str!("../test-fixtures/angular-install.txt");
+            let config = TocConfig {
+                toc_budget: 4000,
+                full_content_threshold: 2000,
+            };
+            let toc = generate_toc(md, md.len(), &config);
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_kotlin_getting_started() {
+            // Kotlin getting started is 3.3KB - use lower threshold
+            let md = include_str!("../test-fixtures/kotlin-getting-started.txt");
+            let config = TocConfig {
+                toc_budget: 4000,
+                full_content_threshold: 2000,
+            };
+            let toc = generate_toc(md, md.len(), &config);
+            insta::assert_snapshot!(toc.unwrap_or_default());
+        }
+
+        #[test]
+        fn snapshot_django_install() {
+            // Django install is 3.1KB - use lower threshold
+            let md = include_str!("../test-fixtures/django-install.txt");
+            let config = TocConfig {
+                toc_budget: 4000,
+                full_content_threshold: 2000,
             };
             let toc = generate_toc(md, md.len(), &config);
             insta::assert_snapshot!(toc.unwrap_or_default());

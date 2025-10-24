@@ -1,0 +1,9 @@
+---
+source: src/toc.rs
+expression: toc.unwrap_or_default()
+---
+  5→Install Python
+ 25→Set up a database
+ 32→Install Django
+ 58→Verifying
+ 72→That’s it![¶](#that-s-it)
